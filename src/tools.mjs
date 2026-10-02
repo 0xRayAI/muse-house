@@ -131,19 +131,20 @@ export function get_room_brief({ room = "" }) {
 
 // ---------------------------------------------------------------- get_house_template
 /** Filled house template (structured) — shared by the MCP tool and the JSON API. */
-export function fillTemplate({ owner_name = "", timezone = "" } = {}) {
+export function fillTemplate({ owner_name = "", timezone = "", spend_threshold = "" } = {}) {
   const fill = (md) =>
     md
       .replace(/\{\{OWNER_NAME\}\}/g, owner_name || "{{OWNER_NAME}}")
-      .replace(/\{\{TIMEZONE\}\}/g, timezone || "{{TIMEZONE}}");
+      .replace(/\{\{TIMEZONE\}\}/g, timezone || "{{TIMEZONE}}")
+      .replace(/\{\{SPEND_THRESHOLD\}\}/g, spend_threshold || "{{SPEND_THRESHOLD}}");
   const house_md = fill(houseTemplate.house_md);
   const op_proc_md = fill(houseTemplate.op_proc_md);
   const remaining = [...new Set((house_md + op_proc_md).match(/\{\{[A-Z_]+\}\}/g) || [])];
   return { house_md, op_proc_md, tokens: houseTemplate.tokens, remaining };
 }
 
-export function get_house_template({ owner_name = "", timezone = "" } = {}) {
-  const { house_md, op_proc_md, remaining } = fillTemplate({ owner_name, timezone });
+export function get_house_template({ owner_name = "", timezone = "", spend_threshold = "" } = {}) {
+  const { house_md, op_proc_md, remaining } = fillTemplate({ owner_name, timezone, spend_threshold });
   return text(
     `# Starter house template\n\nTokens remaining to fill: ${remaining.length ? remaining.join(", ") : "none — fully personalized"}\n\n---\n\n## house/HOUSE.md\n\n${house_md}\n\n---\n\n## house/OP-PROC.md\n\n${op_proc_md}\n\n---\n\n**Host:** write these to the household's house/ directory, filling any remaining tokens from onboarding. The live board (WAVEBOARD.md) is the household's own — this service never sees it.`
   );
@@ -237,12 +238,13 @@ export const TOOL_DEFS = [
   },
   {
     name: "get_house_template",
-    description: "Starter HOUSE.md and OP-PROC.md for a new household, with {{TOKENS}} filled where owner_name/timezone are given. Remaining tokens are listed so the host can finish personalization.",
+    description: "Starter HOUSE.md and OP-PROC.md for a new household, with {{TOKENS}} filled where owner_name/timezone/spend_threshold are given. Remaining tokens are listed so the host can finish personalization.",
     inputSchema: {
       type: "object",
       properties: {
         owner_name: { type: "string", description: "Owner's first name (optional)" },
         timezone: { type: "string", description: "IANA timezone (optional)" },
+        spend_threshold: { type: "string", description: "Ask-first spend threshold, e.g. '10' (optional)" },
       },
     },
     fn: get_house_template,
