@@ -1,0 +1,46 @@
+# Muse House — llms.txt
+
+Muse House is a stateless MCP blueprint service that turns a Muse assistant
+into a personal operating house: rooms (Money, Travel, Home, Health), a
+foundry that mints personalized setups, and a mill of daily routines.
+
+## Endpoints
+
+- MCP (Streamable HTTP, plain JSON responses, no SSE): POST https://muse-house-production.up.railway.app/mcp
+- Health: GET https://muse-house-production.up.railway.app/health
+- Website: https://muse-house-production.up.railway.app/
+- Configurator: https://muse-house-production.up.railway.app/configurator.html
+- Privacy: https://muse-house-production.up.railway.app/privacy.html
+- Terms: https://muse-house-production.up.railway.app/terms.html
+- Source: https://github.com/0xRayAI/muse-house
+
+## Auth
+
+None. The public blueprint tier needs no key or login. The service is
+stateless and stores no user data.
+
+## MCP tools (6)
+
+- suggest_utilities(profile, goal): rank Muse connectors a household should
+  turn on, with a one-line why each.
+- suggest_steps(goal, utilities): ordered operating plan the host executes.
+- list_rooms(): the four room blueprints with one-line descriptions.
+- get_room_brief(room): full blueprint — purpose, connectors, onboarding
+  fills, mill jobs with specs, board cards, ask-first list, side-chat seed.
+- get_house_template(owner_name?, timezone?): starter HOUSE.md + OP-PROC.md
+  with {{TOKENS}} filled where given.
+- codex_check(action): advisory PASS / ADVISORY / FLAG against the 22-term
+  consumer codex. Not a gate — the host decides.
+
+## Usage pattern
+
+1. suggest_utilities → user enables connectors in the Muse app.
+2. get_house_template → host writes the household's HOUSE.md / OP-PROC.md.
+3. list_rooms → get_room_brief per room → one side chat per room, seeded.
+4. suggest_steps → host creates the mill crons and hooks.
+5. codex_check before anything irreversible.
+
+## Privacy
+
+Stateless by design. No accounts, no stored user data, no conversation
+history. Tool arguments are not persisted. See /privacy.html.
