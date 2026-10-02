@@ -16,6 +16,7 @@ import { join, dirname, normalize } from "node:path";
 import { fileURLToPath } from "node:url";
 import { TOOL_DEFS } from "./tools.mjs";
 import { handleApi } from "./api.mjs";
+import { handleApiTemplate } from "./api.mjs";
 
 const SERVICE = "muse-house";
 const VERSION = "0.1.0";
@@ -132,6 +133,17 @@ const http = createServer(async (req, res) => {
       res.writeHead(200, { "content-type": "application/json" });
       res.end(JSON.stringify({ status: "ok", service: SERVICE, version: VERSION, tools: TOOL_DEFS.length, stateless: true }));
       return;
+    }
+    if (req.method === "POST" && req.url === "/api/house-template") {
+      // Personalization travels in the POST body, never the URL —
+      // request-path logs must not see owner names or timezones.
+      const body = await readBody(req).catch(() => ({}));
+      const apiRes = handleApiTemplate(body || {});
+      if (apiRes) {
+        res.writeHead(apiRes.status, apiRes.headers);
+        res.end(apiRes.body);
+        return;
+      }
     }
     if (req.method === "GET" && req.url.startsWith("/api/")) {
       const apiRes = handleApi(req.url, new URL(req.url, "http://localhost").searchParams);
