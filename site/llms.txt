@@ -1,8 +1,9 @@
 # Muse House — llms.txt
 
 Muse House is a stateless MCP blueprint service that turns a Muse assistant
-into a personal operating house: rooms (Money, Travel, Home, Health), a
-foundry that mints personalized setups, and a mill of daily routines.
+into a personal operating house: rooms (Money, Travel, Home, Health, Gaming,
+Art, Dev), a foundry that mints personalized setups, and a mill of daily
+routines.
 
 ## Endpoints
 
@@ -19,16 +20,18 @@ foundry that mints personalized setups, and a mill of daily routines.
 None. The public blueprint tier needs no key or login. The service is
 stateless and stores no user data.
 
-## MCP tools (6)
+## MCP tools (7)
 
 - suggest_utilities(profile, goal): rank Muse connectors a household should
   turn on, with a one-line why each.
 - suggest_steps(goal, utilities): ordered operating plan the host executes.
-- list_rooms(): the four room blueprints with one-line descriptions.
+- list_rooms(): the seven room blueprints with one-line descriptions.
 - get_room_brief(room): full blueprint — purpose, connectors, onboarding
   fills, mill jobs with specs, board cards, ask-first list, side-chat seed.
 - get_house_template(owner_name?, timezone?): starter HOUSE.md + OP-PROC.md
   with {{TOKENS}} filled where given.
+- stamp_rooms(rooms, owner_name): the executable room-creation protocol —
+  returns the exact steps and verbatim seed the host sends to mint rooms.
 - codex_check(action): advisory PASS / ADVISORY / FLAG against the 22-term
   consumer codex. Not a gate — the host decides.
 
