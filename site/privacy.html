@@ -27,7 +27,7 @@
   <p>Standard web-server operational logs (timestamps, request paths, error counts) used to keep the service running. These contain no user content — tool arguments are not persisted.</p>
 
   <h2>Where your data lives</h2>
-  <p>With you. Your board, your routines, your approvals, and your connected accounts live inside your own Muse — never on our servers. When you use the website configurator, everything you type stays in your browser; the house pack it builds is assembled on your device and downloaded by you.</p>
+  <p>With you. Your board, your routines, your approvals, and your connected accounts live inside your own Muse — never on our servers. When you use the website configurator, the name, timezone, and spend threshold you enter are sent to our server in a POST request body (never in the URL) solely to mint your house template, then discarded — nothing is stored, and request-path logs contain no user content. The finished house pack is downloaded by you.</p>
 
   <h2>Third parties</h2>
   <p>We share nothing with third parties because we hold nothing to share. The service is open source — read the code and verify: <a href="https://github.com/0xRayAI/muse-house">github.com/0xRayAI/muse-house</a>.</p>
