@@ -99,13 +99,21 @@ for (const [dir, kind] of millDirs) {
 }
 
 // ---------- house templates (PII-stripped) ----------
+// Owner identity comes from the OWNER_NAME env var at build time, so this
+// public script never names anyone. Run: OWNER_NAME="<name>" node scripts/build-data.mjs
+const OWNER = process.env.OWNER_NAME || "";
+const escOwner = OWNER.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 function stripOwner(md) {
-  return md
-    .replace(/without Henry's explicit go/g, "without {{OWNER_NAME}}'s explicit go")
-    .replace(/sharing Henry's info publicly/g, "sharing {{OWNER_NAME}}'s info publicly")
-    .replace(/needs Henry now/g, "needs {{OWNER_NAME}} now")
-    .replace(/need(?:s|ing)? Henry\b/g, (m) => m.replace("Henry", "{{OWNER_NAME}}"))
-    .replace(/\bHenry\b/g, "{{OWNER_NAME}}")
+  let out = md;
+  if (OWNER) {
+    out = out
+      .replace(new RegExp(`without ${escOwner}'s explicit go`, "g"), "without {{OWNER_NAME}}'s explicit go")
+      .replace(new RegExp(`sharing ${escOwner}'s info publicly`, "g"), "sharing {{OWNER_NAME}}'s info publicly")
+      .replace(new RegExp(`needs ${escOwner} now`, "g"), "needs {{OWNER_NAME}} now")
+      .replace(new RegExp(`need(?:s|ing)? ${escOwner}\\b`, "g"), (m) => m.replace(OWNER, "{{OWNER_NAME}}"))
+      .replace(new RegExp(`\\b${escOwner}\\b`, "g"), "{{OWNER_NAME}}");
+  }
+  return out
     .replace(/standing approval granted 2026-10-01/g, "standing approval (revocable any time)")
     // Generalize the finance-manager mandate (was written for weekly pay)
     .replace(
@@ -143,7 +151,9 @@ writeFileSync(join(DATA, "codex.json"), JSON.stringify(codexOut, null, 2) + "\n"
 // ---------- PII audit: fail the build if owner data leaked ----------
 const bundled = JSON.stringify({ rooms, mill, houseTemplate });
 const leaks = [];
-for (const pat of [/\bhenry\b/i, /\$\s?\d[\d,]*/, /0xray-suit/, /muse-foundry/]) {
+const auditPats = [/\$\s?\d[\d,]*/, /0xray-suit/, /muse-foundry/];
+if (OWNER) auditPats.push(new RegExp(`\\b${escOwner}\\b`, "i"));
+for (const pat of auditPats) {
   if (pat.test(bundled)) leaks.push(String(pat));
 }
 if (leaks.length) {
