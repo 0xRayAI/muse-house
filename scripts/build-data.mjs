@@ -89,6 +89,7 @@ for (const file of readdirSync(join(SRC, "rooms")).filter((f) => f.endsWith(".md
       board_cards_it_files: sections.board_cards_it_files || "",
       ask_first_list: sections.ask_first_list || "",
       seed_brief: sections.seed_brief || "",
+      setup_flow: sections.setup_flow || "",
     },
     mill_specs: millSpecsFor(sections.mill_jobs || ""),
   });
