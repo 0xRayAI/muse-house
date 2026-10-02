@@ -150,6 +150,48 @@ export function get_house_template({ owner_name = "", timezone = "", spend_thres
   );
 }
 
+// ---------------------------------------------------------------- stamp_rooms
+// The product's room-creation protocol. An MCP server cannot create side
+// chats itself — only the host agent can. This tool returns the complete,
+// executable stamping plan so the host just follows it mechanically:
+// one side chat per room, each seeded with its full blueprint.
+export function stamp_rooms({ rooms: roomIds = "", owner_name = "" } = {}) {
+  const ids = roomIds
+    ? roomIds.split(",").map((s) => s.trim().toLowerCase()).filter(Boolean)
+    : rooms.map((r) => r.id);
+  const plans = [];
+  for (const id of ids) {
+    const room = rooms.find((r) => r.id === id);
+    if (!room) return text(`Unknown room: "${id}". Available: ${rooms.map((r) => `\`${r.id}\``).join(", ")}.`);
+    const brief = getRoomBrief(id);
+    if (brief.error) return text(`${brief.error} Available: ${brief.available.map((x) => `\`${x}\``).join(", ")}.`);
+    const s = brief.sections;
+    const seed = (
+      `# Room brief: ${brief.name}\n\n## Purpose\n${s.purpose}\n\n` +
+      `## Connectors needed\n${s.connectors_needed}\n\n` +
+      `## Onboarding fills\n${s.onboarding_fills}\n\n` +
+      `## Mill jobs\n${s.mill_jobs}\n\n` +
+      `## Board cards it files\n${s.board_cards_it_files}\n\n` +
+      `## Ask-first list\n${s.ask_first_list}\n\n` +
+      `## Seed brief\n${s.seed_brief}`
+    ).replace(/\{\{OWNER_NAME\}\}/g, owner_name || "{{OWNER_NAME}}");
+    const millJobs = (brief.millSpecs || [])
+      .map((m) => `- **${m.title}** (\`${m.slug}\`, ${m.kind})`)
+      .filter(Boolean);
+    plans.push(
+      `## Room: ${room.name} (\`${room.id}\`)\n\n` +
+      `**Host action 1 — create the side chat:**\n` +
+      `Create a fresh side chat named "${room.name}".\n\n` +
+      `**Host action 2 — seed it.** Send this as the first message:\n\n---\n${seed}\n---\n\n` +
+      `**Host action 3 — start its mill.** Create these scheduled jobs:\n${millJobs.length ? millJobs.join("\n") : "- (no mill jobs specified)"}\n`
+    );
+  }
+  return text(
+    `# Room stamping protocol — ${plans.length} room(s)\n\n` +
+    `Execute each room's three host actions in order. Do not improvise the seed text; send it verbatim with tokens filled.\n\n---\n\n${plans.join("\n---\n\n")}`
+  );
+}
+
 // ---------------------------------------------------------------- codex_check
 const CODEX_RULES = [
   { match: ["send", "email", "e-mail", "message", "text", "sms", "post", "publish", "share", "dm"], terms: ["M1"] },
@@ -248,6 +290,18 @@ export const TOOL_DEFS = [
       },
     },
     fn: get_house_template,
+  },
+  {
+    name: "stamp_rooms",
+    description: "Executable room-creation protocol for the host agent. Returns, per room, the exact side-chat name to create, the verbatim seed message to send first, and the mill jobs to schedule. The host executes the three actions per room in order — this is how rooms get created from the product.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        rooms: { type: "string", description: "Comma-separated room ids (e.g. 'money,travel'). Omit for all four rooms." },
+        owner_name: { type: "string", description: "Owner's first name, filled into each seed brief" },
+      },
+    },
+    fn: stamp_rooms,
   },
   {
     name: "codex_check",
