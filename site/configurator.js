@@ -34,7 +34,21 @@
     });
   }
 
-  /* ---------- wizard navigation ---------- */
+  /* POST helper for endpoints that take personalization in the body
+     (never in the URL — request-path logs must not see owner names). */
+  function apiPost(path, body) {
+    return fetch("/api/" + path, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body || {}),
+    }).then(function (res) {
+      if (!res.ok) throw new Error("API HTTP " + res.status);
+      return res.json();
+    }).then(function (data) {
+      if (data.error) throw new Error(data.error);
+      return data;
+    });
+  }
   function show(step) {
     state.step = step;
     document.querySelectorAll(".wstep").forEach(function (el) {
@@ -179,9 +193,10 @@
       },
     };
 
-    api("house-template", {
+    apiPost("house-template", {
       owner_name: state.name || "",
       timezone: state.timezone || "",
+      spend_threshold: String(state.spendThreshold != null ? state.spendThreshold : ""),
     }).then(function (tpl) {
       house.template = tpl;
       log("● House template minted", "ok");
