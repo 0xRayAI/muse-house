@@ -8,6 +8,9 @@
  * board lives with their own Muse agent, never here.
  */
 import { createServer } from "node:http";
+import { readFileSync, existsSync } from "node:fs";
+import { join, dirname, normalize } from "node:path";
+import { fileURLToPath } from "node:url";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { z } from "zod";
@@ -16,6 +19,28 @@ import { TOOL_DEFS } from "./tools.mjs";
 const SERVICE = "muse-house";
 const VERSION = "0.1.0";
 const PORT = Number(process.env.PORT || 3000);
+const SITE_DIR = join(dirname(fileURLToPath(import.meta.url)), "..", "site");
+const MIME = {
+  ".html": "text/html; charset=utf-8",
+  ".css": "text/css; charset=utf-8",
+  ".js": "text/javascript; charset=utf-8",
+  ".svg": "image/svg+xml",
+  ".png": "image/png",
+  ".ico": "image/x-icon",
+  ".json": "application/json",
+};
+
+/** Serve the marketing site (GET / and static assets under site/). */
+function serveSite(req, res) {
+  const raw = req.url === "/" ? "/index.html" : req.url.split("?")[0];
+  const safe = normalize(raw).replace(/^(\.\.[/\\])+/, "");
+  const file = join(SITE_DIR, safe);
+  if (!file.startsWith(SITE_DIR) || !existsSync(file)) return false;
+  const ext = safe.slice(safe.lastIndexOf("."));
+  res.writeHead(200, { "content-type": MIME[ext] || "application/octet-stream" });
+  res.end(readFileSync(file));
+  return true;
+}
 
 /** zod object schema from a JSON-schema-ish inputSchema (flat string/array props). */
 function toZod(inputSchema) {
@@ -70,8 +95,9 @@ const http = createServer(async (req, res) => {
       await transport.handleRequest(req, res, body);
       return;
     }
+    if (req.method === "GET" && serveSite(req, res)) return;
     res.writeHead(404, { "content-type": "application/json" });
-    res.end(JSON.stringify({ error: "not found", routes: ["POST /mcp", "GET /health"] }));
+    res.end(JSON.stringify({ error: "not found", routes: ["GET / (site)", "POST /mcp", "GET /health"] }));
   } catch (e) {
     if (!res.headersSent) res.writeHead(500, { "content-type": "application/json" });
     res.end(JSON.stringify({ error: "internal", message: String(e && e.message || e) }));
@@ -79,5 +105,5 @@ const http = createServer(async (req, res) => {
 });
 
 http.listen(PORT, () => {
-  console.log(`${SERVICE} v${VERSION} listening on :${PORT} — POST /mcp (stateless), GET /health`);
+  console.log(`${SERVICE} v${VERSION} listening on :${PORT} — GET / (site), POST /mcp (stateless), GET /health`);
 });
