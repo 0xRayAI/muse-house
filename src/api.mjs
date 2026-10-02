@@ -45,9 +45,11 @@ export function handleApi(url, query) {
     }
 
     case "/api/house-template": {
+      // GET kept for backwards compat; prefer POST (see handleApiTemplate).
       const t = fillTemplate({
         owner_name: query.get("owner_name") || "",
         timezone: query.get("timezone") || "",
+        spend_threshold: query.get("spend_threshold") || "",
       });
       return json(t);
     }
@@ -63,4 +65,18 @@ export function handleApi(url, query) {
     default:
       return null;
   }
+}
+
+/**
+ * POST /api/house-template — same as the GET case, but personalization
+ * (owner name, timezone, spend threshold) arrives in the JSON body so it
+ * never appears in request-path logs.
+ */
+export function handleApiTemplate(body) {
+  const t = fillTemplate({
+    owner_name: body.owner_name || "",
+    timezone: body.timezone || "",
+    spend_threshold: body.spend_threshold || "",
+  });
+  return json(t);
 }
