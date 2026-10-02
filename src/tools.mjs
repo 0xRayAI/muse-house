@@ -125,7 +125,7 @@ export function get_room_brief({ room = "" }) {
     })
     .join("\n\n---\n\n");
   return text(
-    `# Room brief: ${r.name}\n\n## Purpose\n${s.purpose}\n\n## Connectors needed\n${s.connectors_needed}\n\n## Onboarding fills\n${s.onboarding_fills}\n\n## Mill jobs\n${s.mill_jobs}\n\n## Board cards it files\n${s.board_cards_it_files}\n\n## Ask-first list\n${s.ask_first_list}\n\n## Seed brief (host gives this to the side chat, filling {{OWNER_NAME}})\n${s.seed_brief}\n\n---\n\n${specTexts}\n\n---\n\n**How the host stamps this room:** \`chat.create\` (fresh side chat) → paste the seed brief with {{OWNER_NAME}} filled → file the board-cards template → create the cron jobs and hooks from the mill specs above.`
+    `# Room brief: ${r.name}\n\n## Purpose\n${s.purpose}\n\n## Connectors needed\n${s.connectors_needed}\n\n## Onboarding fills\n${s.onboarding_fills}\n\n## Mill jobs\n${s.mill_jobs}\n\n## Board cards it files\n${s.board_cards_it_files}\n\n## Ask-first list\n${s.ask_first_list}\n\n## Seed brief (host gives this to the side chat, filling {{OWNER_NAME}})\n${s.seed_brief}\n\n${s.setup_flow ? `## Setup flow\n${s.setup_flow}\n\n` : ""}---\n\n${specTexts}\n\n---\n\n**How the host stamps this room:** \`chat.create\` (fresh side chat) → paste the seed brief with {{OWNER_NAME}} filled → file the board-cards template → create the cron jobs and hooks from the mill specs above.`
   );
 }
 
@@ -173,7 +173,8 @@ export function stamp_rooms({ rooms: roomIds = "", owner_name = "" } = {}) {
       `## Mill jobs\n${s.mill_jobs}\n\n` +
       `## Board cards it files\n${s.board_cards_it_files}\n\n` +
       `## Ask-first list\n${s.ask_first_list}\n\n` +
-      `## Seed brief\n${s.seed_brief}`
+      `## Seed brief\n${s.seed_brief}\n\n` +
+      (s.setup_flow ? `## Setup flow\n${s.setup_flow}` : "")
     ).replace(/\{\{OWNER_NAME\}\}/g, owner_name || "{{OWNER_NAME}}");
     const millJobs = (brief.millSpecs || [])
       .map((m) => `- **${m.title}** (\`${m.slug}\`, ${m.kind})`)
