@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Set up my house — Muse House</title>
+<meta name="description" content="Configure your Muse House: pick rooms, connect utilities, set house rules.">
+<link rel="stylesheet" href="/styles.css">
+<link rel="stylesheet" href="/configurator.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⌂</text></svg>">
+</head>
+<body>
+
+<header class="nav">
+  <a class="brand" href="/"><span class="brand-mark">⌂</span> Muse House</a>
+  <nav class="nav-links">
+    <a href="/#how">How it works</a>
+    <a href="#rooms">Rooms</a>
+    <a href="/#rules">House rules</a>
+    <a href="/#privacy">Privacy</a>
+  </nav>
+</header>
+
+<main class="wizard-wrap">
+  <div class="wizard" id="wizard">
+
+    <div class="progress" id="progress">
+      <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+      <p class="progress-label" id="progressLabel">Step 1 of 6</p>
+    </div>
+
+    <!-- STEP 1: welcome -->
+    <section class="wstep active" data-step="1">
+      <p class="eyebrow">House configurator</p>
+      <h1>Let's build your house.</h1>
+      <p class="lede">Six quick steps. Your answers go straight into the Muse House service, which mints a house pack built for you — rooms, routines, and rules included.</p>
+      <button class="btn btn-primary" data-next>Start configuring →</button>
+    </section>
+
+    <!-- STEP 2: about you -->
+    <section class="wstep" data-step="2">
+      <p class="eyebrow">Step 2 · About you</p>
+      <h1>Who lives here?</h1>
+      <div class="field">
+        <label for="ownerName">Your first name</label>
+        <input id="ownerName" type="text" placeholder="e.g. Alex" autocomplete="given-name">
+      </div>
+      <div class="field">
+        <label for="timezone">Timezone</label>
+        <input id="timezone" type="text" placeholder="e.g. America/Chicago">
+      </div>
+      <div class="wnav">
+        <button class="btn btn-ghost" data-back>← Back</button>
+        <button class="btn btn-primary" data-next>Continue →</button>
+      </div>
+    </section>
+
+    <!-- STEP 3: rooms -->
+    <section class="wstep" data-step="3" id="rooms">
+      <p class="eyebrow">Step 3 · Rooms</p>
+      <h1>Which rooms do you need?</h1>
+      <p class="lede">Each room becomes its own space inside Muse, with its own board and routines.</p>
+      <div class="pick-grid" id="roomGrid"></div>
+      <div class="wnav">
+        <button class="btn btn-ghost" data-back>← Back</button>
+        <button class="btn btn-primary" data-next>Continue →</button>
+      </div>
+    </section>
+
+    <!-- STEP 4: utilities -->
+    <section class="wstep" data-step="4">
+      <p class="eyebrow">Step 4 · Utilities</p>
+      <h1>What should your house plug into?</h1>
+      <p class="lede" id="utilLede">Based on your rooms, the Foundry suggests these Muse connectors. Toggle anything.</p>
+      <div class="pick-list" id="utilList"><p class="loading">Asking the Foundry…</p></div>
+      <div class="wnav">
+        <button class="btn btn-ghost" data-back>← Back</button>
+        <button class="btn btn-primary" data-next>Continue →</button>
+      </div>
+    </section>
+
+    <!-- STEP 5: rules -->
+    <section class="wstep" data-step="5">
+      <p class="eyebrow">Step 5 · House rules</p>
+      <h1>Where are the lines?</h1>
+      <p class="lede">Your house never crosses these without asking you first.</p>
+      <div class="field">
+        <label for="spendThreshold">Ask me before spending over</label>
+        <div class="money-row"><span>$</span><input id="spendThreshold" type="number" min="0" value="100"></div>
+      </div>
+      <div class="check-row">
+        <input type="checkbox" id="confirmSend" checked>
+        <label for="confirmSend">Confirm before sending messages, emails, or posts</label>
+      </div>
+      <div class="check-row">
+        <input type="checkbox" id="confirmShare" checked>
+        <label for="confirmShare">Confirm before sharing my information anywhere</label>
+      </div>
+      <div class="wnav">
+        <button class="btn btn-ghost" data-back>← Back</button>
+        <button class="btn btn-primary" id="buildBtn">Build my house →</button>
+      </div>
+    </section>
+
+    <!-- STEP 6: building -->
+    <section class="wstep" data-step="6">
+      <p class="eyebrow">Step 6 · Building</p>
+      <h1>Minting your house…</h1>
+      <div class="build-log" id="buildLog"></div>
+    </section>
+
+    <!-- STEP 7: done -->
+    <section class="wstep" data-step="7">
+      <p class="eyebrow">Your house is ready</p>
+      <h1>Welcome home, <span id="doneName">friend</span>.</h1>
+      <div class="house-summary" id="houseSummary"></div>
+      <h2>Move in with Muse</h2>
+      <p class="lede">Copy this setup prompt, paste it into Muse, and your assistant will mint each room as its own chat and start the daily mill.</p>
+      <div class="prompt-box">
+        <pre id="musePrompt"></pre>
+        <button class="btn btn-primary btn-sm" id="copyPrompt">Copy setup prompt</button>
+      </div>
+      <div class="wnav">
+        <button class="btn btn-ghost" id="downloadBtn">Download house.json</button>
+        <a class="btn btn-primary" href="/">Back to home</a>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<footer>
+  <p><span class="brand-mark">⌂</span> Muse House · by 0xRayAI · <a href="https://github.com/0xRayAI/muse-house" target="_blank" rel="noopener">GitHub</a></p>
+</footer>
+
+<script src="/configurator.js"></script>
+</body>
+</html>
