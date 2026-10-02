@@ -26,7 +26,7 @@ check("stamp_rooms protocol", c.text.includes("Host action 1") && c.text.include
 c = await call("stamp_rooms", { rooms: "nope" });
 check("stamp_rooms bad room", c.text.includes("Unknown room"));
 c = await call("stamp_rooms", {});
-check("stamp_rooms all 4", (c.text.match(/Host action 1/g) || []).length === 4);
+check("stamp_rooms all 7", (c.text.match(/Host action 1/g) || []).length === 7);
 c = await call("get_room_brief", { room: "money" });
 check("money seed_brief present", c.text.includes("You are the Money Room"));
 c = await call("get_house_template", { owner_name: "T", timezone: "X", spend_threshold: "10" });
