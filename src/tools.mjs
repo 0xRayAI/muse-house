@@ -9,11 +9,11 @@ import { fileURLToPath } from "node:url";
 const DATA = join(dirname(fileURLToPath(import.meta.url)), "..", "data");
 const load = (f) => JSON.parse(readFileSync(join(DATA, f), "utf8"));
 
-const catalog = load("utilities-catalog.json").catalog;
-const rooms = load("rooms.json").rooms;
-const mill = load("mill.json").specs;
-const houseTemplate = load("house-template.json");
-const codex = load("codex.json").terms;
+export const catalog = load("utilities-catalog.json").catalog;
+export const rooms = load("rooms.json").rooms;
+export const mill = load("mill.json").specs;
+export const houseTemplate = load("house-template.json");
+export const codex = load("codex.json").terms;
 
 const text = (s) => ({ content: [{ type: "text", text: s }] });
 
@@ -26,11 +26,23 @@ function scoreUtility(u, haystack) {
   return hits;
 }
 
-export function suggest_utilities({ profile = "", goal = "" }) {
+/** Ranked utility list (structured) — shared by the MCP tool and the JSON API. */
+export function rankUtilities(profile = "", goal = "") {
   const haystack = `${profile} ${goal}`.toLowerCase();
-  const ranked = catalog
-    .map((u) => ({ id: u.id, name: u.name, why: u.why, matches: scoreUtility(u, haystack) }))
+  return catalog
+    .map((u) => ({
+      id: u.id,
+      name: u.name,
+      why: u.why,
+      keywords: u.keywords,
+      matches: scoreUtility(u, haystack),
+      recommended: scoreUtility(u, haystack) > 0,
+    }))
     .sort((a, b) => b.matches - a.matches || a.name.localeCompare(b.name));
+}
+
+export function suggest_utilities({ profile = "", goal = "" }) {
+  const ranked = rankUtilities(profile, goal);
   const lines = ranked.map(
     (r, i) => `${i + 1}. **${r.name}** (\`${r.id}\`) — ${r.why}${r.matches ? ` [${r.matches} keyword match${r.matches > 1 ? "es" : ""}]` : " [no direct keyword match — general utility]"}`
   );
@@ -51,20 +63,29 @@ const UTILITY_STEPS = {
   asana: "Connect Asana. The board mirrors open cards here so nothing lives in two places.",
 };
 
-export function suggest_steps({ goal = "", utilities = [] }) {
+/** Ordered plan steps (structured) — shared by the MCP tool and the JSON API. */
+export function buildSteps(goal = "", utilities = []) {
   const known = utilities.filter((u) => UTILITY_STEPS[u]);
   const unknown = utilities.filter((u) => !UTILITY_STEPS[u]);
   const steps = [];
-  steps.push(`1. **Turn on utilities.** In the Muse app's connector settings, enable: ${known.length ? known.map((u) => `\`${u}\``).join(", ") : "(none specified — run suggest_utilities first)"}.`);
-  if (unknown.length) steps.push(`   Note: unknown utility id(s) ignored: ${unknown.map((u) => `\`${u}\``).join(", ")}.`);
-  steps.push(`2. **Onboarding answers.** Owner name, timezone, spend ask-first threshold, and pay cadence — these fill the house template tokens.`);
-  for (const u of known) steps.push(`3. **${u}:** ${UTILITY_STEPS[u]}`);
-  const n = steps.length;
-  steps.push(`${n + 1}. **Mint the house.** Call get_house_template with the onboarding answers; the host writes house/HOUSE.md and house/OP-PROC.md.`);
-  steps.push(`${n + 2}. **Stamp rooms.** Call list_rooms, then get_room_brief for each room the household wants; the host opens one side chat per room and seeds it with the brief.`);
-  steps.push(`${n + 3}. **Start the mill.** Create the cron jobs (morning briefing, bill watch, evening wrap) and hooks (bill-arrived, low-balance) from the room briefs' mill specs. New hooks start disabled — dry-run before enabling.`);
-  steps.push(`${n + 4}. **First briefing.** Run the morning-briefing prompt once by hand to prove every source reads, then let the schedule take over.`);
-  return text(`Operating plan for: ${goal || "(no goal given)"}\n\n${steps.join("\n")}\n\nThe host agent executes these in order. Nothing here spends, sends, or shares — each ask-first action still needs the human.`);
+  steps.push({
+    title: "Turn on utilities",
+    detail: `In the Muse app's connector settings, enable: ${known.length ? known.join(", ") : "(none specified — run suggest_utilities first)"}.`,
+  });
+  steps.push({ title: "Onboarding answers", detail: "Owner name, timezone, spend ask-first threshold, and pay cadence — these fill the house template tokens." });
+  for (const u of known) steps.push({ title: u, detail: UTILITY_STEPS[u] });
+  steps.push({ title: "Mint the house", detail: "Call get_house_template with the onboarding answers; the host writes house/HOUSE.md and house/OP-PROC.md." });
+  steps.push({ title: "Stamp rooms", detail: "Call list_rooms, then get_room_brief for each room the household wants; the host opens one side chat per room and seeds it with the brief." });
+  steps.push({ title: "Start the mill", detail: "Create the cron jobs (morning briefing, bill watch, evening wrap) and hooks (bill-arrived, low-balance) from the room briefs' mill specs. New hooks start disabled — dry-run before enabling." });
+  steps.push({ title: "First briefing", detail: "Run the morning-briefing prompt once by hand to prove every source reads, then let the schedule take over." });
+  return { goal: goal || "(no goal given)", steps, unknown };
+}
+
+export function suggest_steps({ goal = "", utilities = [] }) {
+  const { goal: g, steps, unknown } = buildSteps(goal, utilities);
+  const lines = steps.map((s, i) => `${i + 1}. **${s.title}.** ${s.detail}`);
+  if (unknown.length) lines.splice(1, 0, `   Note: unknown utility id(s) ignored: ${unknown.map((u) => `\`${u}\``).join(", ")}.`);
+  return text(`Operating plan for: ${g}\n\n${lines.join("\n")}\n\nThe host agent executes these in order. Nothing here spends, sends, or shares — each ask-first action still needs the human.`);
 }
 
 // ---------------------------------------------------------------- list_rooms
@@ -74,18 +95,31 @@ export function list_rooms() {
 }
 
 // ---------------------------------------------------------------- get_room_brief
-export function get_room_brief({ room = "" }) {
+/** Structured room blueprint — shared by the MCP tool and the JSON API. */
+export function getRoomBrief(room = "") {
   const r = rooms.find((x) => x.id === room.toLowerCase().trim());
-  if (!r) {
-    return text(`Unknown room \`${room}\`. Available: ${rooms.map((x) => `\`${x.id}\``).join(", ")}. Call list_rooms for descriptions.`);
+  if (!r) return { error: `Unknown room \`${room}\`.`, available: rooms.map((x) => x.id) };
+  const specs = r.mill_specs.map((slug) => mill[slug]).filter(Boolean);
+  return {
+    id: r.id,
+    name: r.name,
+    description: r.description,
+    sections: r.sections,
+    millSpecs: specs,
+  };
+}
+
+export function get_room_brief({ room = "" }) {
+  const b = getRoomBrief(room);
+  if (b.error) {
+    return text(`${b.error} Available: ${b.available.map((x) => `\`${x}\``).join(", ")}. Call list_rooms for descriptions.`);
   }
-  const s = r.sections;
-  const specTexts = r.mill_specs
-    .map((slug) => mill[slug])
-    .filter(Boolean)
+  const r = rooms.find((x) => x.id === b.id);
+  const s = b.sections;
+  const specTexts = b.millSpecs
     .map((m) => {
       const body = Object.entries(m.sections)
-        .map(([h, b]) => `### ${h}\n${b}`)
+        .map(([h, bb]) => `### ${h}\n${bb}`)
         .join("\n\n");
       return `## Mill spec: ${m.title} (\`${m.slug}\`, ${m.kind})\n${body}`;
     })
@@ -96,7 +130,8 @@ export function get_room_brief({ room = "" }) {
 }
 
 // ---------------------------------------------------------------- get_house_template
-export function get_house_template({ owner_name = "", timezone = "" } = {}) {
+/** Filled house template (structured) — shared by the MCP tool and the JSON API. */
+export function fillTemplate({ owner_name = "", timezone = "" } = {}) {
   const fill = (md) =>
     md
       .replace(/\{\{OWNER_NAME\}\}/g, owner_name || "{{OWNER_NAME}}")
@@ -104,6 +139,11 @@ export function get_house_template({ owner_name = "", timezone = "" } = {}) {
   const house_md = fill(houseTemplate.house_md);
   const op_proc_md = fill(houseTemplate.op_proc_md);
   const remaining = [...new Set((house_md + op_proc_md).match(/\{\{[A-Z_]+\}\}/g) || [])];
+  return { house_md, op_proc_md, tokens: houseTemplate.tokens, remaining };
+}
+
+export function get_house_template({ owner_name = "", timezone = "" } = {}) {
+  const { house_md, op_proc_md, remaining } = fillTemplate({ owner_name, timezone });
   return text(
     `# Starter house template\n\nTokens remaining to fill: ${remaining.length ? remaining.join(", ") : "none — fully personalized"}\n\n---\n\n## house/HOUSE.md\n\n${house_md}\n\n---\n\n## house/OP-PROC.md\n\n${op_proc_md}\n\n---\n\n**Host:** write these to the household's house/ directory, filling any remaining tokens from onboarding. The live board (WAVEBOARD.md) is the household's own — this service never sees it.`
   );
@@ -125,7 +165,8 @@ const CODEX_RULES = [
 ];
 const FLAG_TERMS = new Set(["M1", 12, 29, 8]);
 
-export function codex_check({ action = "" }) {
+/** Structured codex verdict — shared by the MCP tool and the JSON API. */
+export function checkCodex(action = "") {
   const lower = action.toLowerCase();
   const hitNums = new Set();
   for (const rule of CODEX_RULES) {
@@ -133,15 +174,22 @@ export function codex_check({ action = "" }) {
   }
   const matched = [...hitNums]
     .map((n) => codex.find((t) => String(t.number) === String(n)))
-    .filter(Boolean);
-  const flagged = matched.some((t) => FLAG_TERMS.has(String(t.number)));
+    .filter(Boolean)
+    .map((t) => ({ number: String(t.number), title: t.title, description: t.description }));
+  const flagged = matched.some((t) => FLAG_TERMS.has(t.number));
+  const verdict = matched.length === 0 ? "PASS" : flagged ? "FLAG" : "ADVISORY";
+  return { action, verdict, matched };
+}
+
+export function codex_check({ action = "" }) {
+  const { verdict, matched } = checkCodex(action);
   const cited = matched
     .map((t) => `- [${t.number}] ${t.title}: ${t.description}`)
     .join("\n");
-  const verdict = matched.length === 0
+  const body = matched.length === 0
     ? "PASS — no consumer-codex terms triggered by this wording. Host judgment still applies; vague actions should be clarified before executing."
-    : `${flagged ? "FLAG" : "ADVISORY"} — matched ${matched.length} term(s):\n${cited}\n\nThis is advisory, not a gate. The host agent decides; when in doubt, ask the human.`;
-  return text(`codex_check for: "${action}"\n\n${verdict}`);
+    : `${verdict} — matched ${matched.length} term(s):\n${cited}\n\nThis is advisory, not a gate. The host agent decides; when in doubt, ask the human.`;
+  return text(`codex_check for: "${action}"\n\n${body}`);
 }
 
 export const TOOL_DEFS = [
