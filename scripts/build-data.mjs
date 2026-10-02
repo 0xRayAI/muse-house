@@ -12,7 +12,7 @@
  *   ~/workspace/muse-foundry/house/OP-PROC.md
  *   ~/workspace/muse-foundry/codex-muse.json
  */
-import { readFileSync, writeFileSync, mkdirSync, readdirSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync, readdirSync, existsSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -20,6 +20,13 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(HERE, "..");
 const SRC = join(process.env.HOME || "~", "workspace", "muse-foundry");
 const DATA = join(ROOT, "data");
+
+// If the source tree isn't present (e.g. Railway build), keep the committed
+// data/ as-is and exit cleanly instead of failing the deploy.
+if (!existsSync(SRC)) {
+  console.log("build-data: no source tree at", SRC, "— keeping committed data/, skipping.");
+  process.exit(0);
+}
 
 const read = (p) => readFileSync(p, "utf8");
 
