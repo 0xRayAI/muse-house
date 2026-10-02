@@ -15,6 +15,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { z } from "zod";
 import { TOOL_DEFS } from "./tools.mjs";
+import { handleApi } from "./api.mjs";
 
 const SERVICE = "muse-house";
 const VERSION = "0.1.0";
@@ -86,6 +87,14 @@ const http = createServer(async (req, res) => {
       res.writeHead(200, { "content-type": "application/json" });
       res.end(JSON.stringify({ status: "ok", service: SERVICE, version: VERSION, tools: TOOL_DEFS.length, stateless: true }));
       return;
+    }
+    if (req.method === "GET" && req.url.startsWith("/api/")) {
+      const apiRes = handleApi(req.url, new URL(req.url, "http://localhost").searchParams);
+      if (apiRes) {
+        res.writeHead(apiRes.status, apiRes.headers);
+        res.end(apiRes.body);
+        return;
+      }
     }
     if (req.method === "POST" && req.url === "/mcp") {
       const body = await readBody(req);
