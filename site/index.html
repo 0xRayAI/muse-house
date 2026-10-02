@@ -3,10 +3,95 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Muse House — Your life, running itself.</title>
-<meta name="description" content="Muse House is a personal operating house for Muse users. What is due, what is open, what needs you, what is handled.">
+<title>Muse House — Your personal operating system inside Muse</title>
+<meta name="description" content="Muse House turns your Muse assistant into a personal operating system: Money, Travel, Home, Health, Gaming, Art, and Dev rooms with daily briefings, bill tracking, and trip planning. Free blueprints via MCP.">
+<link rel="canonical" href="https://muse-house-production.up.railway.app/">
+<meta name="robots" content="index, follow">
+<meta name="theme-color" content="#1a1a2e">
+<meta name="keywords" content="Muse House, Muse assistant, MCP server, personal operating system, AI home assistant, money management AI, bill tracking, travel planning AI, Model Context Protocol, Muse connector">
+
+<!-- Open Graph -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Muse House">
+<meta property="og:title" content="Muse House — Your personal operating system inside Muse">
+<meta property="og:description" content="Rooms for Money, Travel, Home, Health, Gaming, Art, and Dev. Daily briefings, bill tracking, trip planning — all inside your Muse assistant.">
+<meta property="og:url" content="https://muse-house-production.up.railway.app/">
+<meta property="og:image" content="https://muse-house-production.up.railway.app/icon.svg">
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Muse House — Your personal operating system inside Muse">
+<meta name="twitter:description" content="Rooms for Money, Travel, Home, Health, Gaming, Art, and Dev. Daily briefings, bill tracking, trip planning — all inside Muse.">
+<meta name="twitter:image" content="https://muse-house-production.up.railway.app/icon.svg">
+
 <link rel="stylesheet" href="/styles.css">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⌂</text></svg>">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "SoftwareApplication",
+      "name": "Muse House",
+      "applicationCategory": "UtilitiesApplication",
+      "operatingSystem": "Muse",
+      "url": "https://muse-house-production.up.railway.app/",
+      "description": "Muse House turns your Muse assistant into a personal operating system: Money, Travel, Home, Health, Gaming, Art, and Dev rooms with daily briefings, bill tracking, and trip planning.",
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+      "author": { "@type": "Organization", "name": "0xRayAI", "url": "https://github.com/0xRayAI" },
+      "isAccessibleForFree": true,
+      "softwareVersion": "0.1.0"
+    },
+    {
+      "@type": "Organization",
+      "name": "0xRayAI",
+      "url": "https://github.com/0xRayAI",
+      "logo": "https://muse-house-production.up.railway.app/icon.svg"
+    },
+    {
+      "@type": "WebSite",
+      "name": "Muse House",
+      "url": "https://muse-house-production.up.railway.app/"
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "What is Muse House?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Muse House is a personal operating system inside Muse. It gives your assistant dedicated rooms for Money, Travel, Home, Health, Gaming, Art, and Dev — each with its own board, daily routines, and rules about what it may do without asking." }
+        },
+        {
+          "@type": "Question",
+          "name": "How does Muse House work?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Three steps: (1) Connect your utilities — the Foundry suggests which Muse connectors to turn on. (2) The Foundry builds your house — a short conversation creates rooms for each part of your life. (3) The Mill runs it daily — morning briefing, bill watch, evening wrap." }
+        },
+        {
+          "@type": "Question",
+          "name": "Does Muse House store my data?",
+          "acceptedAnswer": { "@type": "Answer", "text": "No. The Muse House service is stateless by design — it stores nothing about you. It hands your Muse blueprints and answers questions; your board lives with your assistant, not on our servers." }
+        },
+        {
+          "@type": "Question",
+          "name": "Can Muse House move my money or pay bills?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Never. Bank connections are read-only — they see balances and transactions but cannot move a cent. Every house runs on a Codex that requires confirmation before anything is sent, spent, shared, or deleted." }
+        },
+        {
+          "@type": "Question",
+          "name": "Is Muse House free?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Yes. The blueprints are free and the service is open source on GitHub. Connect it as a custom connector in Muse and set up your house in minutes." }
+        },
+        {
+          "@type": "Question",
+          "name": "What is the Muse House MCP service?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Muse House is an external MCP (Model Context Protocol) service consumed through a custom Muse connector. It exposes seven tools: suggest_utilities, suggest_steps, list_rooms, get_room_brief, get_house_template, stamp_rooms, and codex_check. POST to /mcp with plain JSON responses — no SSE, no auth for the public blueprint tier." }
+        }
+      ]
+    }
+  ]
+}
+</script>
 </head>
 <body>
 
@@ -16,6 +101,7 @@
     <a href="#how">How it works</a>
     <a href="#rooms">Rooms</a>
     <a href="#rules">House rules</a>
+    <a href="#faq">FAQ</a>
     <a href="#privacy">Privacy</a>
   </nav>
   <a class="btn btn-primary btn-sm" href="/configurator.html">Get started</a>
@@ -84,24 +170,39 @@
     <p class="section-sub">Each room is its own space inside Muse, with its own board and its own rules.</p>
     <div class="cards-4">
       <div class="card room">
-        <p class="room-icon">◈</p>
+        <p class="room-icon">💰</p>
         <h3>Money</h3>
         <p>Bills, cash position, weekly plan. Knows what is due before it is late. Never spends without your say.</p>
       </div>
       <div class="card room">
-        <p class="room-icon">✈</p>
+        <p class="room-icon">✈️</p>
         <h3>Travel</h3>
         <p>Trips, dates, bookings, packing. Turns “we should go somewhere” into a plan with a price.</p>
       </div>
       <div class="card room">
-        <p class="room-icon">⌂</p>
+        <p class="room-icon">🏠</p>
         <h3>Home</h3>
         <p>Maintenance, repairs, the never-ending list. Remembers the filter size so you do not have to.</p>
       </div>
       <div class="card room">
-        <p class="room-icon">♥</p>
+        <p class="room-icon">🩺</p>
         <h3>Health</h3>
         <p>Appointments, prescriptions, routines. Gentle nudges, never nagging.</p>
+      </div>
+      <div class="card room">
+        <p class="room-icon">🎮</p>
+        <h3>Gaming</h3>
+        <p>Backlog, deal alerts, squad nights. Never buy a game at full price again.</p>
+      </div>
+      <div class="card room">
+        <p class="room-icon">🎨</p>
+        <h3>Art</h3>
+        <p>Projects, inspiration, portfolio, commissions. Your creative practice, organized.</p>
+      </div>
+      <div class="card room">
+        <p class="room-icon">💻</p>
+        <h3>Dev</h3>
+        <p>Repos, issue triage, deploy tracking, learning queue. Your code life, handled.</p>
       </div>
     </div>
   </section>
@@ -142,10 +243,23 @@
   <section class="section">
     <p class="eyebrow">For builders</p>
     <h2>It is an MCP service.</h2>
-    <p class="section-sub">Muse House is an external MCP service consumed through a custom Muse connector. Six tools: suggest utilities, suggest steps, list rooms, get a room blueprint, get a house template, and a Codex check.</p>
+    <p class="section-sub">Muse House is an external MCP service consumed through a custom Muse connector. Seven tools: suggest utilities, suggest steps, list rooms, get a room blueprint, get a house template, stamp rooms, and a Codex check.</p>
     <div class="codeblock"><span class="code-method">POST</span> /mcp <span class="code-note">— Streamable HTTP · stateless · no auth for the public blueprint tier</span></div>
     <div class="hero-ctas">
       <a class="btn btn-ghost" href="https://github.com/0xRayAI/muse-house" target="_blank" rel="noopener">Read the code</a>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section id="faq" class="section section-tint">
+    <p class="eyebrow">FAQ</p>
+    <h2>Questions, answered.</h2>
+    <div class="rules">
+      <div class="rule"><p><strong>What is Muse House?</strong><br>A personal operating system inside Muse. Dedicated rooms for Money, Travel, Home, Health, Gaming, Art, and Dev — each with its own board, daily routines, and rules about what it may do without asking.</p></div>
+      <div class="rule"><p><strong>How does it work?</strong><br>Three steps: connect your utilities (the Foundry suggests which Muse connectors to turn on), the Foundry builds your house from a short conversation, and the Mill runs it daily — morning briefing, bill watch, evening wrap.</p></div>
+      <div class="rule"><p><strong>Does it store my data?</strong><br>No. The service is stateless by design. It hands your Muse blueprints and answers questions — your board lives with your assistant, not on our servers.</p></div>
+      <div class="rule"><p><strong>Can it move my money or pay bills?</strong><br>Never. Bank connections are read-only. Every house runs on a Codex that requires your confirmation before anything is sent, spent, shared, or deleted.</p></div>
+      <div class="rule"><p><strong>Is it free?</strong><br>Yes. The blueprints are free and the service is open source. Connect it as a custom connector in Muse and set up your house in minutes.</p></div>
     </div>
   </section>
 
