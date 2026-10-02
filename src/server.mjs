@@ -31,6 +31,7 @@ const MIME = {
   ".ico": "image/x-icon",
   ".json": "application/json",
   ".txt": "text/plain; charset=utf-8",
+  ".xml": "application/xml; charset=utf-8",
 };
 
 /** Serve the marketing site (GET / and static assets under site/). */
