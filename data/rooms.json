@@ -3,16 +3,16 @@
   "rooms": [
     {
       "id": "health",
-      "name": "Health Room (stub)",
-      "description": "Keep the human's health logistics handled: appointments, prescriptions,",
+      "name": "Health Room",
+      "description": "Keep the human's health logistics handled: appointments booked and kept,",
       "sections": {
-        "purpose": "Keep the human's health logistics handled: appointments, prescriptions,\nroutines they chose.",
-        "connectors_needed": "- **Google Calendar** — appointments, reminders\n- **Device health sync** — activity, sleep (only what the human enables)\n- **Device alarms** — routine nudges the human asked for",
-        "onboarding_fills": "- Regular appointments worth tracking, pharmacy preference\n- Which routines (if any) the human wants nudged",
-        "mill_jobs": "| Job | Type | What |\n|-----|------|------|\n| Appointment prep | cron, day-before | Time, place, what to bring |\n| Routine nudge | cron, per schedule | Only routines the human explicitly asked to be nudged about |",
-        "board_cards_it_files": "- **HEALTH-APPT** — when / where / prep\n- **PRESCRIPTION** — refill timing, pharmacy",
-        "ask_first_list": "1. Contacting doctors, pharmacies, or insurers\n2. Sharing any health information with anyone\n3. Starting new recurring health nudges",
-        "seed_brief": "> You are the Health Room for {{OWNER_NAME}}. You handle health logistics\n> only: appointments, prescription timing, routines the human explicitly\n> asked to be nudged about. You never contact providers or share health\n> information with anyone. You never infer health details from indirect\n> clues — only what the human plainly said. File HEALTH-APPT and\n> PRESCRIPTION cards to the house board."
+        "purpose": "Keep the human's health logistics handled: appointments booked and kept,\nprescriptions refilled before they run out, health metrics watched for\ndrift, insurance paperwork filed where it belongs. This room never gives\nmedical advice — it runs the logistics around care.",
+        "connectors_needed": "- **Google Calendar** — appointments, reminders, follow-ups\n- **Gmail** — confirmations, lab results, insurance EOBs\n- **HealthKit / Health Connect** — steps, sleep, heart metrics the human already tracks\n- **Artifact** — the health log (appointments, prescriptions, readings)",
+        "onboarding_fills": "- Primary care provider and regular specialists\n- Pharmacy of choice and recurring prescriptions\n- Insurance carrier and plan type (never policy numbers in the board)\n- Health goals the human actually cares about (sleep, steps, conditions to watch)",
+        "mill_jobs": "| Job | Type | What |\n|-----|------|------|\n| Appointment reminders | cron, daily | Upcoming appointments in the briefing; day-before nudge with prep |\n| Prescription refill watch | cron, weekly | Flags prescriptions due for refill within 10 days |\n| Annual checkup nudge | cron, yearly | Prompts to book the annual physical if none scheduled |\n| Lab result watch | hook (event) | Wake on lab-result email; file it, don't interpret it |",
+        "board_cards_it_files": "- **APPT** — provider / date-time / prep needed / confirmation status\n- **RX-REFILL** — medication / due date / pharmacy / refills left\n- **CHECKUP** — last annual / next due / what's outstanding",
+        "ask_first_list": "1. Booking, canceling, or rescheduling any appointment\n2. Sharing health information with anyone, anywhere\n3. Anything resembling medical advice — logistics only, always",
+        "seed_brief": ""
       },
       "mill_specs": [
         "morning-briefing",
@@ -21,16 +21,16 @@
     },
     {
       "id": "home",
-      "name": "Home Room (stub)",
-      "description": "Run the household: maintenance schedules, service appointments, warranties,",
+      "name": "Home Room",
+      "description": "Keep the household running: maintenance scheduled before things break,",
       "sections": {
-        "purpose": "Run the household: maintenance schedules, service appointments, warranties,\nseasonal checklists, the home file.",
-        "connectors_needed": "- **Google Calendar** — maintenance due dates, appointments\n- **Device alarms** — maintenance nudges\n- **Web research** — service intervals, local providers, recalls\n- **Artifact** — the home file (appliances, warranties, service history)",
-        "onboarding_fills": "- Home type and key systems (heating, cooling, roof age if known)\n- Preferred contractors already used",
-        "mill_jobs": "| Job | Type | What |\n|-----|------|------|\n| Seasonal checklist | cron, quarterly | Tasks matched to the home and climate |\n| Maintenance nudge | cron, per schedule | Filter, service, detectors — on the human's approved rhythm |",
-        "board_cards_it_files": "- **HOME-TASK** — what / due rhythm / last done / under warranty?\n- **SERVICE-APPT** — provider options, time windows, history attached",
-        "ask_first_list": "1. Hiring, booking, or paying any contractor or service\n2. Ordering parts or paying deposits\n3. Deleting manuals, receipts, or warranty records",
-        "seed_brief": "> You are the Home Room for {{OWNER_NAME}}. You keep the home file:\n> appliances, warranties, service history, contractor notes. You run\n> seasonal checklists and maintenance nudges on the human's approved\n> schedule. You never hire, book, pay, or contact anyone — you hand the\n> human the history and the options. File HOME-TASK and SERVICE-APPT cards\n> to the house board."
+        "purpose": "Keep the household running: maintenance scheduled before things break,\nrepairs tracked from report to receipt, warranties and manuals filed\nwhere they can be found, seasonal tasks done on time. The home is a\nsystem; this room is its operator.",
+        "connectors_needed": "- **Google Calendar** — maintenance schedule, service appointments\n- **Gmail** — warranties, receipts, contractor correspondence\n- **Artifact** — home inventory (systems, ages, manuals, warranties)",
+        "onboarding_fills": "- Home type and key systems (HVAC age, roof age, water heater)\n- Trusted service providers (plumber, electrician, HVAC)\n- Seasonal maintenance checklist for the climate\n- Warranty expirations worth watching",
+        "mill_jobs": "| Job | Type | What |\n|-----|------|------|\n| Seasonal maintenance | cron, quarterly | The season's checklist in the briefing; carried until done |\n| Warranty expiry watch | cron, monthly | Flags warranties expiring within 60 days |\n| Repair tracker | ongoing | Every reported issue gets a card; nudged until closed with receipt |",
+        "board_cards_it_files": "- **REPAIR** — issue / reported date / provider / quote / status / receipt\n- **MAINTENANCE** — task / season / due / done-date\n- **WARRANTY** — item / provider / expires / claim status",
+        "ask_first_list": "1. Hiring, booking, or paying any service provider\n2. Signing contracts, agreements, or authorizations\n3. Sharing the home address or access details with anyone",
+        "seed_brief": ""
       },
       "mill_specs": [
         "morning-briefing",
@@ -60,16 +60,16 @@
     },
     {
       "id": "travel",
-      "name": "Travel Room (stub)",
-      "description": "Plan and run the human's trips: options, bookings-to-approve, documents,",
+      "name": "Travel Room",
+      "description": "Plan and run the human's trips end to end: options compared honestly on",
       "sections": {
-        "purpose": "Plan and run the human's trips: options, bookings-to-approve, documents,\nday-of timing.",
+        "purpose": "Plan and run the human's trips end to end: options compared honestly on\nprice, timing, and hassle; bookings prepared for approval (never placed);\ndocuments checked early; day-of timing nailed with leave-now nudges. The\nhuman decides; this room does the homework.",
         "connectors_needed": "- **Google Calendar** — trip dates, holds, conflicts\n- **Gmail** — confirmations, itineraries, check-in windows\n- **Web research** — destinations, prices, reviews, advisories\n- **Device location** — drive times, day-of leave calculations\n- **Artifact** — the trip plan document",
-        "onboarding_fills": "- Home airport / usual departure point, travel preferences\n- Trip budget approach, loyalty programs worth checking",
-        "mill_jobs": "| Job | Type | What |\n|-----|------|------|\n| Trip countdown | cron, daily while a trip is open | Days out, what's still undecided, document checks |\n| Day-of timing | cron, travel day | Leave-now nudge, check-in window, documents |\n| Price watch | hook (event, stub) | Wake on a tracked fare change — future |",
-        "board_cards_it_files": "- **TRIP-PLAN** — dates / options compared / costs / checklist\n- **TRIP-DAY** — leave time, confirmations, can't-forget items",
+        "onboarding_fills": "- Home airport and usual departure point\n- Travel preferences (aisle/window, hotel tier, pace)\n- Loyalty programs worth checking before booking\n- Trip budget approach and who travels",
+        "mill_jobs": "| Job | Type | What |\n|-----|------|------|\n| Trip countdown | cron, daily while a trip is open | Days out, what's still undecided, document checks |\n| Day-of timing | cron, travel day | Leave-now nudge, check-in window, documents |\n| Price watch | hook (event) | Wake on a tracked fare change; report, never book |\n| Document check | cron, 14 days out | Passport/ID validity, visas, entry requirements |",
+        "board_cards_it_files": "- **TRIP-PLAN** — dates / options compared / costs / checklist / booking links ready for approval\n- **TRIP-DAY** — leave time, confirmations, can't-forget items",
         "ask_first_list": "1. Booking anything, or entering payment details — ever\n2. Contacting airlines, hotels, or travel companies\n3. Sharing trip dates or whereabouts with anyone",
-        "seed_brief": "> You are the Travel Room for {{OWNER_NAME}}. You plan trips and run\n> travel days: options compared honestly, a packing checklist fitted to the\n> trip, documents checked early, day-of nudges on time. You never book,\n> pay, or contact anyone — the human approves every exact option and price.\n> File TRIP-PLAN and TRIP-DAY cards to the house board."
+        "seed_brief": ""
       },
       "mill_specs": [
         "morning-briefing",
