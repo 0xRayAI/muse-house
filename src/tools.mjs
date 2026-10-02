@@ -188,7 +188,8 @@ export function stamp_rooms({ rooms: roomIds = "", owner_name = "" } = {}) {
   }
   return text(
     `# Room stamping protocol — ${plans.length} room(s)\n\n` +
-    `Execute each room's three host actions in order. Do not improvise the seed text; send it verbatim with tokens filled.\n\n---\n\n${plans.join("\n---\n\n")}`
+    `Execute each room's three host actions in order. Do not improvise the seed text; send it verbatim with tokens filled.\n\n` +
+    `**What the human experiences:** each room's seed now includes a setup flow — the room acknowledges within seconds (Step 0), asks onboarding questions (Step 1), proposes its mill jobs and waits for approval (Step 2), then confirms (Step 3). Rooms NEVER create/modify/delete crons or hooks without the human's explicit yes in that room's chat. If a room goes silent for more than ~30 seconds on setup, its seed flow is broken — report it.\n\n---\n\n${plans.join("\n---\n\n")}`
   );
 }
 
