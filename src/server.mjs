@@ -1,8 +1,11 @@
 #!/usr/bin/env node
 /**
- * server.mjs — Amuse House Foundry MCP service.
+ * server.mjs — Muse House Foundry MCP service.
  *
  * Streamable HTTP (stateless) on a single /mcp endpoint, plus GET /health.
+ * POST /mcp answers with a single `application/json` body (never SSE):
+ * Meta's egress proxy has been reported to hang on Server-Sent Events, so
+ * plain JSON keeps directory review and custom connectors working.
  * Stateless by design: no sessions, no user data stored, every request
  * independent. Blueprints and governance checks only — the household's
  * board lives with their own Muse agent, never here.
@@ -11,9 +14,6 @@ import { createServer } from "node:http";
 import { readFileSync, existsSync } from "node:fs";
 import { join, dirname, normalize } from "node:path";
 import { fileURLToPath } from "node:url";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
-import { z } from "zod";
 import { TOOL_DEFS } from "./tools.mjs";
 import { handleApi } from "./api.mjs";
 
@@ -29,6 +29,7 @@ const MIME = {
   ".png": "image/png",
   ".ico": "image/x-icon",
   ".json": "application/json",
+  ".txt": "text/plain; charset=utf-8",
 };
 
 /** Serve the marketing site (GET / and static assets under site/). */
@@ -43,27 +44,71 @@ function serveSite(req, res) {
   return true;
 }
 
-/** zod object schema from a JSON-schema-ish inputSchema (flat string/array props). */
-function toZod(inputSchema) {
-  const shape = {};
-  const props = inputSchema.properties || {};
-  for (const [key, def] of Object.entries(props)) {
-    let s;
-    if (def.type === "array") s = z.array(z.string());
-    else s = z.string();
-    if (def.description) s = s.describe(def.description);
-    if (!(inputSchema.required || []).includes(key)) s = s.optional();
-    shape[key] = s;
-  }
-  return shape;
+/** Minimal MCP request handler: single application/json response, never SSE. */
+const PROTOCOL_VERSIONS = ["2025-06-18", "2025-03-26"];
+
+function mcpError(id, code, message) {
+  return { jsonrpc: "2.0", id: id ?? null, error: { code, message } };
 }
 
-function createMcpServer() {
-  const server = new McpServer({ name: SERVICE, version: VERSION });
-  for (const def of TOOL_DEFS) {
-    server.registerTool(def.name, { description: def.description, inputSchema: toZod(def.inputSchema) }, async (args) => def.fn(args || {}));
+async function handleMcpMessage(msg) {
+  if (!msg || typeof msg !== "object" || msg.jsonrpc !== "2.0" || typeof msg.method !== "string") {
+    return mcpError(msg && msg.id, -32600, "Invalid Request");
   }
-  return server;
+  const isNotification = msg.id === undefined || msg.id === null;
+  const ok = (result) => ({ jsonrpc: "2.0", id: msg.id, result });
+
+  switch (msg.method) {
+    case "initialize": {
+      const v = msg.params && msg.params.protocolVersion;
+      return ok({
+        protocolVersion: PROTOCOL_VERSIONS.includes(v) ? v : PROTOCOL_VERSIONS[0],
+        capabilities: { tools: {} },
+        serverInfo: { name: SERVICE, version: VERSION },
+      });
+    }
+    case "notifications/initialized":
+      return null; // notification: no JSON-RPC response
+    case "ping":
+      return ok({});
+    case "tools/list":
+      return ok({
+        tools: TOOL_DEFS.map((t) => ({
+          name: t.name,
+          description: t.description,
+          inputSchema: t.inputSchema,
+        })),
+      });
+    case "tools/call": {
+      const name = msg.params && msg.params.name;
+      const def = TOOL_DEFS.find((t) => t.name === name);
+      if (!def) {
+        return isNotification ? null : mcpError(msg.id, -32602, `Unknown tool: ${name}`);
+      }
+      try {
+        const result = await def.fn((msg.params && msg.params.arguments) || {});
+        return isNotification ? null : ok(result);
+      } catch (e) {
+        return isNotification ? null : mcpError(msg.id, -32603, String((e && e.message) || e));
+      }
+    }
+    default:
+      return isNotification ? null : mcpError(msg.id, -32601, `Method not found: ${msg.method}`);
+  }
+}
+
+/** POST /mcp → one JSON body, Content-Type: application/json. */
+async function handleMcpPost(body) {
+  const batch = Array.isArray(body);
+  const messages = batch ? body : [body];
+  const responses = [];
+  for (const m of messages) {
+    const r = await handleMcpMessage(m);
+    if (r) responses.push(r);
+  }
+  if (batch) return { status: 200, body: responses };
+  if (responses.length === 0) return { status: 202, body: "" }; // notification only
+  return { status: 200, body: responses[0] };
 }
 
 function readBody(req) {
@@ -98,10 +143,14 @@ const http = createServer(async (req, res) => {
     }
     if (req.method === "POST" && req.url === "/mcp") {
       const body = await readBody(req);
-      const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
-      const server = createMcpServer();
-      await server.connect(transport);
-      await transport.handleRequest(req, res, body);
+      const mcpRes = await handleMcpPost(body);
+      if (mcpRes.status === 202) {
+        res.writeHead(202);
+        res.end();
+      } else {
+        res.writeHead(mcpRes.status, { "content-type": "application/json; charset=utf-8" });
+        res.end(JSON.stringify(mcpRes.body));
+      }
       return;
     }
     if (req.method === "GET" && serveSite(req, res)) return;
