@@ -27,12 +27,13 @@ Use this when applying at https://muse.ai/platform (work-email login required).
   Stateless — no session IDs, no `Mcp-Session-Id` header.
 - **Auth:** none. The public blueprint tier needs no key or login.
 - **Health:** `GET https://muse-house-production.up.railway.app/health`
-  → `{"status":"ok","service":"muse-house","version":"0.1.0","tools":6,"stateless":true}`
-- **Tools (6):** `suggest_utilities`, `suggest_steps`, `list_rooms`,
-  `get_room_brief`, `get_house_template`, `codex_check`
+  → `{"status":"ok","service":"muse-house","version":"0.1.0","tools":7,"stateless":true}`
+- **Tools (7):** `suggest_utilities`, `suggest_steps`, `list_rooms`,
+  `get_room_brief`, `get_house_template`, `stamp_rooms`, `codex_check`
 - **Test calls for review:**
-  - `tools/list` → 6 tools
+  - `tools/list` → 7 tools
   - `tools/call get_room_brief {"room":"money"}` → full Money Room blueprint
+  - `tools/call stamp_rooms {"rooms":"health","owner_name":"Alex"}` → executable room-creation protocol
   - `tools/call codex_check {"action":"pay the electric bill"}` → FLAG with term cited
   - `tools/call suggest_utilities {"profile":"freelancer","goal":"never miss a bill"}` → ranked connectors
 
@@ -59,7 +60,7 @@ Use this when applying at https://muse.ai/platform (work-email login required).
 
 1. `GET /health` → 200, `status: ok`.
 2. `POST /mcp` `initialize` → `serverInfo.name: muse-house`.
-3. `POST /mcp` `tools/list` → 6 tools.
+3. `POST /mcp` `tools/list` → 7 tools.
 4. `POST /mcp` `tools/call suggest_utilities` → ranked connector list.
 5. Open https://muse-house-production.up.railway.app/configurator.html,
    complete the 6-step wizard → house pack minted in-browser, setup prompt
