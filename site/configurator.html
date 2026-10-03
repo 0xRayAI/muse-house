@@ -34,6 +34,10 @@
       <p class="eyebrow">House configurator</p>
       <h1>Let's build your house.</h1>
       <p class="lede">Six quick steps. Your answers go straight into the Muse House service, which mints a house pack built for you — rooms, routines, and rules included.</p>
+      <div class="prereq">
+        <strong>One thing first:</strong> connect the custom connector in Muse, or nothing below can move in. Tell your Muse:<br>
+        <code>Add a custom connector for Muse House using the MCP endpoint https://mymuse.house/mcp</code>
+      </div>
       <button class="btn btn-primary" data-next>Start configuring →</button>
     </section>
 
@@ -115,7 +119,7 @@
       <h1>Welcome home, <span id="doneName">friend</span>.</h1>
       <div class="house-summary" id="houseSummary"></div>
       <h2>Move in with Muse</h2>
-      <p class="lede">Copy this setup prompt, paste it into Muse, and your assistant will mint each room as its own chat and start the daily mill.</p>
+      <p class="lede">Copy this setup prompt and paste it into Muse — with the <strong>custom connector connected</strong> (see step 1 if you skipped it). Your assistant will mint each room as its own chat and start the daily mill.</p>
       <div class="prompt-box">
         <pre id="musePrompt"></pre>
         <button class="btn btn-primary btn-sm" id="copyPrompt">Copy setup prompt</button>

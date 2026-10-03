@@ -123,3 +123,28 @@
 @media (max-width: 640px) {
   .pick-grid { grid-template-columns: 1fr; }
 }
+
+/* ---------- connector prerequisite notice ---------- */
+.prereq {
+  background: #fff8e6;
+  border: 1px solid #f0d98c;
+  border-radius: 14px;
+  padding: 16px 20px;
+  font-size: 15px;
+  color: var(--ink-soft);
+  margin: 0 0 26px;
+  max-width: 34em;
+}
+.prereq strong { color: var(--ink); }
+.prereq code {
+  display: block;
+  background: var(--ink);
+  color: #e8eaed;
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin-top: 10px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 13.5px;
+  overflow-x: auto;
+  white-space: nowrap;
+}
