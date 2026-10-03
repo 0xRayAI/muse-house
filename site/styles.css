@@ -201,3 +201,35 @@ footer .brand-mark { width: 22px; height: 22px; font-size: 12px; border-radius: 
 .doc .updated { font-size: 14px; color: var(--ink-faint); }
 .doc a { color: var(--blue); }
 .doc code { background: var(--tint); padding: 2px 7px; border-radius: 6px; font-size: 14.5px; }
+
+/* ---------- help form ---------- */
+.help-form { margin-top: 24px; }
+.help-form .field { display: block; margin-bottom: 20px; }
+.help-form .field > span {
+  display: block; font-weight: 600; font-size: 14px;
+  text-transform: uppercase; letter-spacing: .08em;
+  color: var(--ink-soft); margin-bottom: 10px;
+}
+.help-form input[type="text"], .help-form textarea {
+  width: 100%; padding: 13px 16px; font: inherit; font-size: 16px;
+  color: var(--ink); background: var(--surface);
+  border: 1px solid var(--line); border-radius: 14px; outline: none;
+}
+.help-form input[type="text"]:focus, .help-form textarea:focus {
+  border-color: var(--blue); box-shadow: 0 0 0 3px rgba(0,100,224,.12);
+}
+.help-form textarea { resize: vertical; min-height: 140px; }
+.pill-row { display: flex; flex-wrap: wrap; gap: 10px; }
+.pill { cursor: pointer; }
+.pill input { position: absolute; opacity: 0; pointer-events: none; }
+.pill span {
+  display: inline-block; padding: 9px 18px; border-radius: 999px;
+  border: 1px solid var(--line); background: var(--surface);
+  font-size: 15px; font-weight: 500; color: var(--ink-soft);
+  transition: all .12s ease;
+}
+.pill input:checked + span {
+  background: var(--ink); border-color: var(--ink); color: #fff;
+}
+.pill input:focus-visible + span { box-shadow: 0 0 0 3px rgba(0,100,224,.25); }
+.help-form .fine { margin-top: 14px; font-size: 14px; color: var(--ink-faint); }
