@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Help &amp; Feedback — Muse House</title>
+<meta name="description" content="Get help with Muse House or send feedback. Ask a question, report a bug, or suggest a feature — we read everything.">
+<link rel="canonical" href="https://mymuse.house/help.html">
+<meta name="robots" content="index, follow">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Muse House">
+<meta property="og:title" content="Help & Feedback — Muse House">
+<meta property="og:description" content="Ask a question, report a bug, or suggest a feature. We read everything.">
+<meta property="og:url" content="https://mymuse.house/help.html">
+<link rel="stylesheet" href="/styles.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⌂</text></svg>">
+</head>
+<body>
+<header class="nav">
+  <a class="brand" href="/"><span class="brand-mark">⌂</span> Muse House</a>
+  <nav class="nav-links"><a href="/">Home</a><a href="/configurator.html">Set up my house</a><a href="/help.html">Help</a></nav>
+</header>
+<main class="doc">
+  <p class="eyebrow">Help &amp; Feedback</p>
+  <h1>Stuck? Tell us.</h1>
+  <p class="updated">We read everything sent here.</p>
+
+  <h2>Before you write</h2>
+  <p>A few places that might already have your answer:</p>
+  <p>
+    · <a href="/#faq">Frequently asked questions</a> — the short version<br>
+    · <a href="/#how">How it works</a> — rooms, the foundry, and the mill<br>
+    · <a href="/llms.txt">Technical docs</a> — endpoints, tools, and auth<br>
+    · <a href="https://github.com/0xRayAI/muse-house/issues" target="_blank" rel="noopener">GitHub issues</a> — known bugs and feature requests
+  </p>
+
+  <h2>Send feedback</h2>
+  <p>Pick a type, say what's up, and hit send. It opens your email app with
+  everything addressed and filled in — <strong>nothing is stored on our
+  servers</strong>; the message goes straight from you to us.</p>
+
+  <form id="help-form" class="help-form">
+    <label class="field">
+      <span>What is this about?</span>
+      <div class="pill-row" role="radiogroup" aria-label="Message type">
+        <label class="pill"><input type="radio" name="kind" value="Help" checked> <span>Help</span></label>
+        <label class="pill"><input type="radio" name="kind" value="Feedback"> <span>Feedback</span></label>
+        <label class="pill"><input type="radio" name="kind" value="Bug report"> <span>Bug report</span></label>
+        <label class="pill"><input type="radio" name="kind" value="Feature idea"> <span>Feature idea</span></label>
+      </div>
+    </label>
+    <label class="field">
+      <span>Subject</span>
+      <input type="text" id="help-subject" maxlength="120" placeholder="e.g. The configurator won't finish step 3" required>
+    </label>
+    <label class="field">
+      <span>Details</span>
+      <textarea id="help-body" rows="7" maxlength="5000" placeholder="What happened, what you expected, and anything else that helps us reproduce it." required></textarea>
+    </label>
+    <button type="submit" class="btn btn-primary">Send via email</button>
+    <p class="fine">Opens your email app addressed to <strong>blaze@blazesc.com</strong>.</p>
+  </form>
+
+  <h2>Something urgent?</h2>
+  <p>If the service itself is down, check
+  <a href="/health">the health endpoint</a> first — if it doesn't say
+  <code>"status":"ok"</code>, include that in your message so we know where
+  to look.</p>
+</main>
+<footer>
+  <p><span class="brand-mark">⌂</span> Muse House · by 0xRayAI · <a href="https://github.com/0xRayAI/muse-house" target="_blank" rel="noopener">GitHub</a> · <a href="/help.html">Help</a> · <a href="/privacy.html">Privacy</a> · <a href="/terms.html">Terms</a></p>
+</footer>
+<script>
+document.getElementById('help-form').addEventListener('submit', function (e) {
+  e.preventDefault();
+  var kind = document.querySelector('input[name="kind"]:checked').value;
+  var subject = document.getElementById('help-subject').value.trim();
+  var body = document.getElementById('help-body').value.trim();
+  if (!subject || !body) return;
+  var to = 'blaze@blazesc.com';
+  var mailSubject = '[Muse House — ' + kind + '] ' + subject;
+  var mailBody = body + '\n\n—\nSent from mymuse.house/help.html';
+  window.location.href = 'mailto:' + to
+    + '?subject=' + encodeURIComponent(mailSubject)
+    + '&body=' + encodeURIComponent(mailBody);
+});
+</script>
+</body>
+</html>
