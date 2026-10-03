@@ -22,7 +22,6 @@
   .bling-card h3 { margin: 0; font-size: 1.1rem; }
   .bling-card p { margin: 0; color: #5c554a; flex: 1; }
   .bling-card .price { font-weight: 700; font-size: 1.25rem; }
-  .bling-card .soon { display: inline-block; margin-top: .5rem; padding: .45rem .9rem; border-radius: 999px; background: #f3ede2; color: #8a7f66; font-weight: 700; font-size: .9rem; letter-spacing: .04em; text-transform: uppercase; }
   .bling-card button { margin-top: .5rem; padding: .7rem 1rem; border: none; border-radius: 10px; background: #1c1a17; color: #fff; font-size: 1rem; cursor: pointer; }
   .bling-card button:disabled { background: #b9b2a6; cursor: default; }
   .bling-banner { border-radius: 12px; padding: 1rem 1.25rem; margin: 1rem 0; display: none; }
@@ -106,13 +105,10 @@
     for (const item of items) {
       const card = document.createElement("div");
       card.className = "bling-card";
-      const comingSoon = !!item.coming_soon;
       const price = "$" + (item.price_cents / 100).toFixed(item.price_cents % 100 ? 2 : 0);
       card.innerHTML =
         '<div class="kind">' + label + "</div><h3></h3><p></p>" +
-        (comingSoon
-          ? '<div class="soon">Coming soon</div>'
-          : '<div class="price">' + price + '</div><button type="button">Buy with Stripe</button>');
+        '<div class="price">' + price + '</div><button type="button">Buy with Stripe</button>';
       card.querySelector("h3").textContent = item.name;
       card.querySelector("p").textContent = item.description;
       if (item.image) {

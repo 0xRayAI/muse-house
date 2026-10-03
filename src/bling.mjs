@@ -58,7 +58,6 @@ export async function handleBlingCheckout(body) {
   const itemId = body && typeof body.item_id === "string" ? body.item_id : "";
   const item = getCatalog().items.find((i) => i.id === itemId);
   if (!item) return json(400, { error: "unknown_item" });
-  if (item.coming_soon) return json(409, { error: "coming_soon", message: "This delight isn't ready yet." });
   const rawHouse = body && typeof body.house === "string" ? body.house.trim() : "";
   const house = rawHouse.replace(/[^a-zA-Z0-9 _-]/g, "").slice(0, 60);
   const stripe = await stripeClient().catch(() => null);
