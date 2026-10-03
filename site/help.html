@@ -52,12 +52,26 @@
       </div>
     </label>
     <label class="field">
-      <span>Subject</span>
-      <input type="text" id="help-subject" maxlength="120" placeholder="e.g. The configurator won't finish step 3" required>
+      <span>Which room is this about? <em style="text-transform:none;letter-spacing:0;font-weight:400">(or the website itself)</em></span>
+      <div class="pill-row" role="radiogroup" aria-label="Room">
+        <label class="pill"><input type="radio" name="room" value="website" checked> <span>Website</span></label>
+        <label class="pill"><input type="radio" name="room" value="money"> <span>Money</span></label>
+        <label class="pill"><input type="radio" name="room" value="travel"> <span>Travel</span></label>
+        <label class="pill"><input type="radio" name="room" value="home"> <span>Home</span></label>
+        <label class="pill"><input type="radio" name="room" value="health"> <span>Health</span></label>
+        <label class="pill"><input type="radio" name="room" value="game"> <span>Game</span></label>
+        <label class="pill"><input type="radio" name="room" value="art"> <span>Art</span></label>
+        <label class="pill"><input type="radio" name="room" value="dev"> <span>Dev</span></label>
+        <label class="pill"><input type="radio" name="room" value="other"> <span>Other</span></label>
+      </div>
+    </label>
+    <label class="field">
+      <span>One-line summary</span>
+      <input type="text" id="help-subject" maxlength="150" placeholder="e.g. The configurator won't finish step 3" required>
     </label>
     <label class="field">
       <span>Details</span>
-      <textarea id="help-body" rows="7" maxlength="5000" placeholder="What happened, what you expected, and anything else that helps us reproduce it." required></textarea>
+      <textarea id="help-body" rows="6" maxlength="2000" placeholder="What happened, what you expected, and anything else that helps us reproduce it. Please don't include personal details like account numbers." required></textarea>
     </label>
     <button type="submit" class="btn btn-primary" id="help-submit">Send</button>
     <p class="fine" id="help-status" aria-live="polite"></p>
@@ -76,18 +90,19 @@
 document.getElementById('help-form').addEventListener('submit', async function (e) {
   e.preventDefault();
   var kind = document.querySelector('input[name="kind"]:checked').value;
-  var subject = document.getElementById('help-subject').value.trim();
-  var body = document.getElementById('help-body').value.trim();
+  var room = document.querySelector('input[name="room"]:checked').value;
+  var summary = document.getElementById('help-subject').value.trim();
+  var details = document.getElementById('help-body').value.trim();
   var btn = document.getElementById('help-submit');
   var status = document.getElementById('help-status');
-  if (!subject || !body) return;
+  if (!summary || !details) return;
 
   function mailtoFallback() {
     // Email service unavailable — hand a pre-addressed draft to the
     // visitor's own mail app instead of losing the message.
     var to = 'support@mymuse.house';
-    var mailSubject = '[Muse House — ' + kind + '] ' + subject;
-    var mailBody = body + '\n\n—\nSent from mymuse.house/help.html';
+    var mailSubject = '[Muse House — ' + kind + '] ' + room + ': ' + summary;
+    var mailBody = details + '\n\n—\nSent from mymuse.house/help.html';
     window.location.href = 'mailto:' + to
       + '?subject=' + encodeURIComponent(mailSubject)
       + '&body=' + encodeURIComponent(mailBody);
@@ -100,7 +115,7 @@ document.getElementById('help-form').addEventListener('submit', async function (
     var r = await fetch('/api/feedback', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ kind: kind, subject: subject, body: body })
+      body: JSON.stringify({ kind: kind, room: room, summary: summary, details: details })
     });
     if (r.ok) {
       status.textContent = 'Sent — thanks, we read everything.';

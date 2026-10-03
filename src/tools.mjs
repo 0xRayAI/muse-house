@@ -5,7 +5,7 @@
 import { readFileSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { validateFeedback, sendFeedbackEmail, mcpFeedbackAllowed } from "./feedback.mjs";
+import { validateFeedback, normalizeFeedback, sendFeedbackEmail, mcpFeedbackAllowed, getFeedbackForm } from "./feedback.mjs";
 
 const DATA = join(dirname(fileURLToPath(import.meta.url)), "..", "data");
 const load = (f) => JSON.parse(readFileSync(join(DATA, f), "utf8"));
@@ -238,24 +238,43 @@ export function codex_check({ action = "" }) {  const { verdict, matched } = che
 }
 
 /**
- * send_feedback — the one sanctioned outbound action. A resident asks their
- * assistant to tell the team something; the assistant relays it. The tool
- * description mandates an explicit human ask — never speculative.
+ * send_feedback — the one sanctioned outbound action, and only as a RELAY.
+ * The human's words pass through an assistant, so two rules are contractual:
+ * (1) show the human the exact kind/room/summary/details and get an explicit
+ * yes before calling — never speculative, never a side effect;
+ * (2) never forward personal or private information — strip names, emails,
+ * phones, addresses, account numbers, financial figures; summarize the issue
+ * without them. The service redacts obvious patterns server-side as a
+ * backstop and reports the redaction count.
  */
-export async function send_feedback({ kind = "", subject = "", body = "" }) {
-  const invalid = validateFeedback({ kind, subject, body });
+export async function send_feedback(args = {}) {
+  const invalid = validateFeedback(args);
   if (invalid) return text(`send_feedback error: ${invalid}`);
   if (!mcpFeedbackAllowed()) {
     return text("send_feedback error: rate limit reached — too many feedback messages this hour. Ask the human to try again later.");
   }
-  const result = await sendFeedbackEmail({ kind, subject, body });
+  const result = await sendFeedbackEmail(args, { scrub: true });
   if (result.error === "not_configured") {
     return text("send_feedback unavailable: the email service is not configured on this deployment. Tell the human their feedback was not sent.");
   }
   if (result.error) {
     return text("send_feedback error: the message could not be delivered. Tell the human to try again in a bit.");
   }
-  return text("Feedback sent to the Muse House team. Thank them and move on.");
+  const note = result.redactions > 0
+    ? ` Note: ${result.redactions} span(s) looking like personal data were redacted before sending.`
+    : "";
+  return text(`Feedback sent to the Muse House team. Thank the human and move on.${note}`);
+}
+
+/** get_feedback_form — the form schema, so hosts present it consistently. */
+export function get_feedback_form() {
+  const f = getFeedbackForm();
+  const fields = f.fields
+    .map((fld) => `- ${fld.name} (${fld.type}${fld.values ? ": " + fld.values.join(" | ") : ""}${fld.maxLength ? ", max " + fld.maxLength + " chars" : ""}): ${fld.label}`)
+    .join("\n");
+  return text(
+    `Feedback form schema:\n${fields}\n\nPrivacy note (show the human): ${f.privacy_note}\n\nFlow: ${f.flow}`
+  );
 }
 
 export const TOOL_DEFS = [
@@ -340,16 +359,23 @@ export const TOOL_DEFS = [
   },
   {
     name: "send_feedback",
-    description: "Send feedback about Muse House to the team (support inbox). ONLY call this when the human explicitly asks to send feedback, report a bug, or suggest a feature — never speculatively, never as a side effect of another task. The message goes to the Muse House team, not to any of the user's contacts.",
+    description: "Relay user feedback about Muse House to the team inbox. STRUCTURED form — call get_feedback_form first and present its fields. RULES: (1) Only call when the human explicitly asks to send feedback AND has confirmed the exact kind/room/summary/details you will send — show it verbatim, get a yes. Never speculative, never a side effect. (2) Never forward personal or private information: strip names, emails, phones, addresses, account numbers, financial figures; summarize the issue without them. The service redacts obvious patterns server-side as a backstop. The message goes to the Muse House team, not to any of the user's contacts.",
     inputSchema: {
       type: "object",
       properties: {
         kind: { type: "string", enum: ["Help", "Feedback", "Bug report", "Feature idea"], description: "What kind of feedback this is" },
-        subject: { type: "string", description: "Short subject line (max 150 chars)" },
-        body: { type: "string", description: "The feedback message (max 6000 chars)" },
+        room: { type: "string", enum: ["money", "travel", "home", "health", "game", "art", "dev", "website", "other"], description: "Which room (or the website) this is about" },
+        summary: { type: "string", description: "One-line summary (max 150 chars)" },
+        details: { type: "string", description: "What happened, or what they'd like to see (max 2000 chars). No personal data." },
       },
-      required: ["kind", "subject", "body"],
+      required: ["kind", "room", "summary", "details"],
     },
     fn: send_feedback,
+  },
+  {
+    name: "get_feedback_form",
+    description: "Returns the feedback form schema: fields, allowed values, length limits, and the privacy note to show the human. Call this when the human wants to send feedback, present the fields conversationally, then show them the exact text and get an explicit yes before calling send_feedback.",
+    inputSchema: { type: "object", properties: {} },
+    fn: get_feedback_form,
   },
 ];
