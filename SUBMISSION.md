@@ -16,20 +16,20 @@ Use this when applying at https://muse.ai/platform (work-email login required).
   read-only, Home runs chores, maintenance, and household automations. A
   22-term consumer codex keeps the house helpful and never reckless: confirm
   before any send, spend, share, or delete.
-- **Icon:** https://muse-house-production.up.railway.app/icon.svg
-- **Website:** https://muse-house-production.up.railway.app/
-- **Privacy policy:** https://muse-house-production.up.railway.app/privacy.html
-- **Terms:** https://muse-house-production.up.railway.app/terms.html
-- **Docs for reviewers / LLMs:** https://muse-house-production.up.railway.app/llms.txt
+- **Icon:** https://mymuse.house/icon.svg
+- **Website:** https://mymuse.house/
+- **Privacy policy:** https://mymuse.house/privacy.html
+- **Terms:** https://mymuse.house/terms.html
+- **Docs for reviewers / LLMs:** https://mymuse.house/llms.txt
 - **Source code:** https://github.com/0xRayAI/muse-house (MIT)
 
 ## Technical
 
-- **Endpoint (MCP, Streamable HTTP):** `POST https://muse-house-production.up.railway.app/mcp`
+- **Endpoint (MCP, Streamable HTTP):** `POST https://mymuse.house/mcp`
 - **Response format:** single `application/json` body per POST (no SSE).
   Stateless — no session IDs, no `Mcp-Session-Id` header.
 - **Auth:** none. The public blueprint tier needs no key or login.
-- **Health:** `GET https://muse-house-production.up.railway.app/health`
+- **Health:** `GET https://mymuse.house/health`
   → `{"status":"ok","service":"muse-house","version":"0.1.0","tools":7,"stateless":true}`
 - **Tools (7):** `suggest_utilities`, `suggest_steps`, `list_rooms`,
   `get_room_brief`, `get_house_template`, `stamp_rooms`, `codex_check`
@@ -76,7 +76,7 @@ Use this when applying at https://muse.ai/platform (work-email login required).
 2. `POST /mcp` `initialize` → `serverInfo.name: muse-house`.
 3. `POST /mcp` `tools/list` → 7 tools.
 4. `POST /mcp` `tools/call suggest_utilities` → ranked connector list.
-5. Open https://muse-house-production.up.railway.app/configurator.html,
+5. Open https://mymuse.house/configurator.html,
    complete the 6-step wizard → house pack minted in-browser, setup prompt
    references this `/mcp` endpoint.
 6. Confirm no login wall, no key required, responses are plain JSON.
