@@ -30,11 +30,13 @@ Use this when applying at https://muse.ai/platform (work-email login required).
   Stateless — no session IDs, no `Mcp-Session-Id` header.
 - **Auth:** none. The public blueprint tier needs no key or login.
 - **Health:** `GET https://mymuse.house/health`
-  → `{"status":"ok","service":"muse-house","version":"0.1.0","tools":7,"stateless":true}`
-- **Tools (7):** `suggest_utilities`, `suggest_steps`, `list_rooms`,
-  `get_room_brief`, `get_house_template`, `stamp_rooms`, `codex_check`
+  → `{"status":"ok","service":"muse-house","version":"0.1.0","tools":8,"stateless":true}`
+- **Tools (8):** `suggest_utilities`, `suggest_steps`, `list_rooms`,
+  `get_room_brief`, `get_house_template`, `stamp_rooms`, `codex_check`,
+  `send_feedback` (forwards user-initiated feedback to the support inbox;
+  only to be called when the human explicitly asks)
 - **Test calls for review:**
-  - `tools/list` → 7 tools
+  - `tools/list` → 8 tools
   - `tools/call get_room_brief {"room":"money"}` → full Money Room blueprint
   - `tools/call stamp_rooms {"rooms":"health","owner_name":"Alex"}` → executable room-creation protocol
   - `tools/call codex_check {"action":"pay the electric bill"}` → FLAG with term cited
@@ -48,8 +50,11 @@ Use this when applying at https://muse.ai/platform (work-email login required).
   (timestamps, paths, error counts) with no user content.
 - The household's board, routines, approvals, and connected accounts live
   inside the user's own Muse — never on our servers.
-- The service takes **no actions in the world**: it does not move money, send
-  messages, book travel, or publish anything. It hands blueprints and advisory
+- The service takes **no high-stakes actions in the world**: it does not move money, send
+  messages on the user's behalf, book travel, or publish anything. The single exception is
+  **user-initiated feedback**: the website help form (POST /api/feedback) and the
+  `send_feedback` MCP tool forward a message the human explicitly asked to send to the
+  support inbox. Both are rate-limited, validated, and store nothing. It hands blueprints and advisory
   checks to the host assistant; the human approves every irreversible step.
 - `codex_check` is **advisory, not a gate** — documented as such in the terms.
 
@@ -75,7 +80,7 @@ Use this when applying at https://muse.ai/platform (work-email login required).
 
 1. `GET /health` → 200, `status: ok`.
 2. `POST /mcp` `initialize` → `serverInfo.name: muse-house`.
-3. `POST /mcp` `tools/list` → 7 tools.
+3. `POST /mcp` `tools/list` → 8 tools.
 4. `POST /mcp` `tools/call suggest_utilities` → ranked connector list.
 5. Open https://mymuse.house/configurator.html,
    complete the 6-step wizard → house pack minted in-browser, setup prompt

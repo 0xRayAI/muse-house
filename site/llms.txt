@@ -22,7 +22,7 @@ routines.
 None. The public blueprint tier needs no key or login. The service is
 stateless and stores no user data.
 
-## MCP tools (7)
+## MCP tools (8)
 
 - suggest_utilities(profile, goal): rank Muse connectors a household should
   turn on, with a one-line why each.
@@ -36,6 +36,9 @@ stateless and stores no user data.
   returns the exact steps and verbatim seed the host sends to mint rooms.
 - codex_check(action): advisory PASS / ADVISORY / FLAG against the 22-term
   consumer codex. Not a gate — the host decides.
+- send_feedback(kind, subject, body): forward user-initiated feedback to the
+  Muse House team. Only call when the human explicitly asks — never
+  speculatively. Rate-limited; nothing is stored.
 
 ## Usage pattern
 

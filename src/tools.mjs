@@ -5,6 +5,7 @@
 import { readFileSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { validateFeedback, sendFeedbackEmail, mcpFeedbackAllowed } from "./feedback.mjs";
 
 const DATA = join(dirname(fileURLToPath(import.meta.url)), "..", "data");
 const load = (f) => JSON.parse(readFileSync(join(DATA, f), "utf8"));
@@ -226,8 +227,7 @@ export function checkCodex(action = "") {
   return { action, verdict, matched };
 }
 
-export function codex_check({ action = "" }) {
-  const { verdict, matched } = checkCodex(action);
+export function codex_check({ action = "" }) {  const { verdict, matched } = checkCodex(action);
   const cited = matched
     .map((t) => `- [${t.number}] ${t.title}: ${t.description}`)
     .join("\n");
@@ -235,6 +235,27 @@ export function codex_check({ action = "" }) {
     ? "PASS — no consumer-codex terms triggered by this wording. Host judgment still applies; vague actions should be clarified before executing."
     : `${verdict} — matched ${matched.length} term(s):\n${cited}\n\nThis is advisory, not a gate. The host agent decides; when in doubt, ask the human.`;
   return text(`codex_check for: "${action}"\n\n${body}`);
+}
+
+/**
+ * send_feedback — the one sanctioned outbound action. A resident asks their
+ * assistant to tell the team something; the assistant relays it. The tool
+ * description mandates an explicit human ask — never speculative.
+ */
+export async function send_feedback({ kind = "", subject = "", body = "" }) {
+  const invalid = validateFeedback({ kind, subject, body });
+  if (invalid) return text(`send_feedback error: ${invalid}`);
+  if (!mcpFeedbackAllowed()) {
+    return text("send_feedback error: rate limit reached — too many feedback messages this hour. Ask the human to try again later.");
+  }
+  const result = await sendFeedbackEmail({ kind, subject, body });
+  if (result.error === "not_configured") {
+    return text("send_feedback unavailable: the email service is not configured on this deployment. Tell the human their feedback was not sent.");
+  }
+  if (result.error) {
+    return text("send_feedback error: the message could not be delivered. Tell the human to try again in a bit.");
+  }
+  return text("Feedback sent to the Muse House team. Thank them and move on.");
 }
 
 export const TOOL_DEFS = [
@@ -316,5 +337,19 @@ export const TOOL_DEFS = [
       required: ["action"],
     },
     fn: codex_check,
+  },
+  {
+    name: "send_feedback",
+    description: "Send feedback about Muse House to the team (support inbox). ONLY call this when the human explicitly asks to send feedback, report a bug, or suggest a feature — never speculatively, never as a side effect of another task. The message goes to the Muse House team, not to any of the user's contacts.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        kind: { type: "string", enum: ["Help", "Feedback", "Bug report", "Feature idea"], description: "What kind of feedback this is" },
+        subject: { type: "string", description: "Short subject line (max 150 chars)" },
+        body: { type: "string", description: "The feedback message (max 6000 chars)" },
+      },
+      required: ["kind", "subject", "body"],
+    },
+    fn: send_feedback,
   },
 ];
