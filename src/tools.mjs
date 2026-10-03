@@ -1,5 +1,5 @@
 /**
- * tools.mjs — the 6 Amuse House Foundry tools.
+ * tools.mjs — the 9 Muse House tools.
  * Stateless: loads bundled data/ at startup, keeps nothing per user.
  */
 import { readFileSync } from "node:fs";
@@ -305,7 +305,7 @@ export const TOOL_DEFS = [
   },
   {
     name: "list_rooms",
-    description: "List the house room blueprints (money, travel, home, health) with one-line descriptions.",
+    description: "List the house room blueprints (money, travel, home, health, game, art, dev) with one-line descriptions.",
     inputSchema: { type: "object", properties: {} },
     fn: list_rooms,
   },
@@ -315,7 +315,7 @@ export const TOOL_DEFS = [
     inputSchema: {
       type: "object",
       properties: {
-        room: { type: "string", description: "Room id: money | travel | home | health" },
+        room: { type: "string", description: "Room id: money | travel | home | health | game | art | dev" },
       },
       required: ["room"],
     },
@@ -340,7 +340,7 @@ export const TOOL_DEFS = [
     inputSchema: {
       type: "object",
       properties: {
-        rooms: { type: "string", description: "Comma-separated room ids (e.g. 'money,travel'). Omit for all four rooms." },
+        rooms: { type: "string", description: "Comma-separated room ids (e.g. 'money,travel'). Omit for all seven rooms." },
         owner_name: { type: "string", description: "Owner's first name, filled into each seed brief" },
       },
     },

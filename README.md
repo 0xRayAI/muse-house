@@ -1,6 +1,6 @@
-# Amuse House Foundry — MCP service
+# Muse House — MCP service
 
-The foundry behind Amuse House, served as a **stateless external MCP service**
+The foundry behind Muse House, served as a **stateless external MCP service**
 over Streamable HTTP. A Muse host agent connects it as a custom connector and
 gets: house blueprints, room briefs, utility suggestions, operating plans, and
 consumer-codex checks.

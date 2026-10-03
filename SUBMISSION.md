@@ -31,7 +31,7 @@ Use this when applying at https://muse.ai/platform (work-email login required).
 - **Auth:** none. The public blueprint tier needs no key or login.
 - **Health:** `GET https://mymuse.house/health`
   → `{"status":"ok","service":"muse-house","version":"0.1.0","tools":9,"stateless":true}`
-- **Tools (8):** `suggest_utilities`, `suggest_steps`, `list_rooms`,
+- **Tools (9):** `suggest_utilities`, `suggest_steps`, `list_rooms`,
   `get_room_brief`, `get_house_template`, `stamp_rooms`, `codex_check`,
   `send_feedback` (structured kind/room/summary/details; forwards
   user-initiated feedback to the support inbox; only to be called when the
