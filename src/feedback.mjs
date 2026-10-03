@@ -151,7 +151,7 @@ export function getFeedbackForm() {
       "Never include personal or private information: no names, emails, phone numbers, " +
       "addresses, account numbers, or financial figures. Describe the issue, not your data. " +
       "Anything looking like personal data is redacted before sending.",
-    flow: "Present the fields conversationally, then show the user the exact text to be sent and get an explicit yes before calling send_feedback.",
+    flow: "Present the fields conversationally, then show the user the exact kind/room/summary/details to be sent (verbatim) and get an explicit yes before calling send_feedback with confirmed: true.",
   };
 }
 
