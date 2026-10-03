@@ -7,13 +7,15 @@ routines.
 
 ## Endpoints
 
-- MCP (Streamable HTTP, plain JSON responses, no SSE): POST https://muse-house-production.up.railway.app/mcp
-- Health: GET https://muse-house-production.up.railway.app/health
-- Website: https://muse-house-production.up.railway.app/
-- Configurator: https://muse-house-production.up.railway.app/configurator.html
-- Privacy: https://muse-house-production.up.railway.app/privacy.html
-- Terms: https://muse-house-production.up.railway.app/terms.html
+- MCP (Streamable HTTP, plain JSON responses, no SSE): POST https://mymuse.house/mcp
+- Health: GET https://mymuse.house/health
+- Website: https://mymuse.house/
+- Configurator: https://mymuse.house/configurator.html
+- Privacy: https://mymuse.house/privacy.html
+- Terms: https://mymuse.house/terms.html
 - Source: https://github.com/0xRayAI/muse-house
+- Help & feedback: https://mymuse.house/help.html (form opens the user's
+  email app addressed to support; nothing is stored server-side)
 
 ## Auth
 
