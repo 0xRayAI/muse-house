@@ -158,7 +158,8 @@ export function get_house_template({ owner_name = "", timezone = "", spend_thres
 // one side chat per room, each seeded with its full blueprint.
 export function stamp_rooms({ rooms: roomIds = "", owner_name = "" } = {}) {
   const ids = roomIds
-    ? roomIds.split(",").map((s) => s.trim().toLowerCase()).filter(Boolean)
+    ? (Array.isArray(roomIds) ? roomIds : String(roomIds).split(","))
+        .map((s) => String(s).trim().toLowerCase()).filter(Boolean)
     : rooms.map((r) => r.id);
   const plans = [];
   for (const id of ids) {

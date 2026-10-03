@@ -222,6 +222,16 @@ const http = createServer(async (req, res) => {
       }
       return;
     }
+    if (req.method === "GET" && req.url === "/mcp") {
+      res.writeHead(200, { "content-type": "application/json; charset=utf-8" });
+      res.end(JSON.stringify({
+        service: "Muse House",
+        note: "This is a machine endpoint — it only speaks MCP over POST. If you're a human, start at https://mymuse.house/ (docs: https://mymuse.house/tech.html).",
+        usage: "POST a JSON-RPC 2.0 body here (tools/list, tools/call).",
+        routes: ["GET / (site)", "POST /mcp", "GET /health"]
+      }));
+      return;
+    }
     if (req.method === "GET" && serveSite(req, res)) return;
     res.writeHead(404, { "content-type": "application/json" });
     res.end(JSON.stringify({ error: "not found", routes: ["GET / (site)", "POST /mcp", "GET /health"] }));
