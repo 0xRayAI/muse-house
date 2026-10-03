@@ -43,10 +43,9 @@ body {
   font-weight: 700; font-size: 18px; color: var(--ink);
   text-decoration: none; letter-spacing: -0.01em;
 }
-.brand-mark {
-  display: inline-flex; align-items: center; justify-content: center;
+img.brand-mark {
+  display: inline-block; vertical-align: -7px;
   width: 30px; height: 30px; border-radius: 9px;
-  background: var(--ink); color: #fff; font-size: 16px;
 }
 .nav-links { display: flex; gap: 22px; margin-left: 8px; }
 .nav-links a {
@@ -181,7 +180,7 @@ footer {
   color: var(--ink-faint); font-size: 14px;
 }
 footer a { color: var(--ink-soft); }
-footer .brand-mark { width: 22px; height: 22px; font-size: 12px; border-radius: 7px; }
+footer img.brand-mark { width: 24px; height: 24px; border-radius: 7px; vertical-align: -6px; }
 
 /* ---------- responsive ---------- */
 @media (max-width: 900px) {
