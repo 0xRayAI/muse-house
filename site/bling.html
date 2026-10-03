@@ -111,6 +111,13 @@
         '<div class="price">' + price + '</div><button type="button">Buy with Stripe</button>';
       card.querySelector("h3").textContent = item.name;
       card.querySelector("p").textContent = item.description;
+      if (item.image) {
+        const img = document.createElement("img");
+        img.src = item.image;
+        img.alt = item.name;
+        img.style.cssText = "width:120px;height:120px;border-radius:14px;display:block;margin:0 auto .5rem;";
+        card.insertBefore(img, card.querySelector(".price"));
+      }
       const btn = card.querySelector("button");
       btn.addEventListener("click", async () => {
         btn.disabled = true;
