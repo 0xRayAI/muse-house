@@ -83,7 +83,7 @@
   });
 
   /* ---------- step 3: rooms (live from the connector) ---------- */
-  var ROOM_ICONS = { money: "◈", travel: "✈", home: "⌂", health: "♥" };
+  var ROOM_ICONS = { money: "👛", travel: "✈️", home: "🏠", health: "❤️", game: "🎮", art: "🎨", dev: "💻", coach: "🎯", bling: "💎" };
   function loadRooms() {
     api("rooms").then(function (data) {
       var rooms = data.rooms || [];
