@@ -1,17 +1,19 @@
 /**
- * tools.mjs — the 9 Muse House tools.
+ * tools.mjs — the 10 Muse House MCP tools.
  * Stateless: loads bundled data/ at startup, keeps nothing per user.
  */
 import { readFileSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { validateFeedback, normalizeFeedback, sendFeedbackEmail, mcpFeedbackAllowed, getFeedbackForm } from "./feedback.mjs";
+import { validateFeedback, sendFeedbackEmail, mcpFeedbackAllowed, getFeedbackForm, FEEDBACK_ROOMS } from "./feedback.mjs";
 
 const DATA = join(dirname(fileURLToPath(import.meta.url)), "..", "data");
 const load = (f) => JSON.parse(readFileSync(join(DATA, f), "utf8"));
 
 export const catalog = load("utilities-catalog.json").catalog;
 export const rooms = load("rooms.json").rooms;
+const ROOM_IDS = rooms.map((r) => r.id);
+const ROOM_IDS_LIST = ROOM_IDS.join(" | ");
 export const mill = load("mill.json").specs;
 export const houseTemplate = load("house-template.json");
 export const codex = load("codex.json").terms;
@@ -250,6 +252,11 @@ export function codex_check({ action = "" }) {  const { verdict, matched } = che
  * backstop and reports the redaction count.
  */
 export async function send_feedback(args = {}) {
+  if (args.confirmed !== true) {
+    return text(
+      "send_feedback error: confirmed must be true. Show the human the exact kind, room, summary, and details you will send (verbatim), get an explicit yes, then call send_feedback again with confirmed: true."
+    );
+  }
   const invalid = validateFeedback(args);
   if (invalid) return text(`send_feedback error: ${invalid}`);
   if (!mcpFeedbackAllowed()) {
@@ -379,7 +386,7 @@ export const TOOL_DEFS = [
   },
   {
     name: "list_rooms",
-    description: "List the house room blueprints (money, travel, home, health, game, art, dev) with one-line descriptions.",
+    description: `List the nine house room blueprints (${ROOM_IDS.join(", ")}) with one-line descriptions.`,
     inputSchema: { type: "object", properties: {} },
     fn: list_rooms,
   },
@@ -389,7 +396,7 @@ export const TOOL_DEFS = [
     inputSchema: {
       type: "object",
       properties: {
-        room: { type: "string", description: "Room id: money | travel | home | health | game | art | dev" },
+        room: { type: "string", description: `Room id: ${ROOM_IDS_LIST}` },
       },
       required: ["room"],
     },
@@ -439,11 +446,15 @@ export const TOOL_DEFS = [
       type: "object",
       properties: {
         kind: { type: "string", enum: ["Help", "Feedback", "Bug report", "Feature idea"], description: "What kind of feedback this is" },
-        room: { type: "string", enum: ["money", "travel", "home", "health", "game", "art", "dev", "website", "other"], description: "Which room (or the website) this is about" },
+        room: { type: "string", enum: FEEDBACK_ROOMS, description: "Which room (or the website) this is about" },
         summary: { type: "string", description: "One-line summary (max 150 chars)" },
         details: { type: "string", description: "What happened, or what they'd like to see (max 2000 chars). No personal data." },
+        confirmed: {
+          type: "boolean",
+          description: "Must be true — set only after the human has seen the exact kind/room/summary/details verbatim and said yes.",
+        },
       },
-      required: ["kind", "room", "summary", "details"],
+      required: ["kind", "room", "summary", "details", "confirmed"],
     },
     fn: send_feedback,
   },
