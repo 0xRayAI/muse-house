@@ -2,8 +2,9 @@
 
 The foundry behind Muse House, served as a **stateless external MCP service**
 over Streamable HTTP. A Muse host agent connects it as a custom connector and
-gets: house blueprints, room briefs, utility suggestions, operating plans, and
-consumer-codex checks.
+gets: house blueprints, room briefs, utility suggestions, operating plans,
+consumer-codex checks, room stamping, feedback relay, and blueprint version
+diffs.
 
 ## What it is
 
@@ -17,16 +18,28 @@ consumer-codex checks.
 - **Advisory governance.** `codex_check` cites the 22-term consumer codex and
   returns PASS / ADVISORY / FLAG. It is not a gate; the host agent decides.
 
-## Tools
+Muse House turns a Muse assistant into a personal operating house: the Foundry
+mints setup from a short configurator — **nine rooms** in `data/rooms.json`
+(art, bling, coach, dev, game, health, home, money, travel), each becoming its
+own side chat — and the Mill runs daily routines (morning briefing, bill watch,
+nudges, evening wrap). Rooms are conversational companions, not dashboards.
+
+## Tools (10)
 
 | Tool | Input | What it returns |
 |------|-------|-----------------|
-| `suggest_utilities` | profile, goal | Ranked Muse connectors (utilities) to turn on, each with a one-line why. Catalog: `data/utilities-catalog.json` (editable). |
+| `suggest_utilities` | profile, goal | Ranked Muse connectors (utilities) to turn on, each with a one-line why. Catalog: `data/utilities-catalog.json`. |
 | `suggest_steps` | goal, utilities[] | Ordered operating plan the host executes: onboarding → utility setup → house mint → room stamping → mill startup. |
-| `list_rooms` | — | The 4 room blueprints (money, travel, home, health) with one-line descriptions. |
+| `list_rooms` | — | All room blueprints in `data/rooms.json` with one-line descriptions. |
 | `get_room_brief` | room | Full blueprint: purpose, connectors, onboarding fills, mill jobs + full mill specs, board-card templates, ask-first list, side-chat seed brief. |
-| `get_house_template` | owner_name?, timezone? | Starter `HOUSE.md` + `OP-PROC.md` with `{{TOKENS}}` filled where given; remaining tokens listed. |
+| `get_house_template` | owner_name?, timezone?, spend_threshold? | Starter `HOUSE.md` + `OP-PROC.md` with `{{TOKENS}}` filled where given; remaining tokens listed. |
+| `stamp_rooms` | rooms?, owner_name | Executable room-creation protocol: side-chat names, seed messages, mill jobs to schedule. |
 | `codex_check` | action | PASS / ADVISORY / FLAG against the consumer codex, matched terms cited. Advisory only. |
+| `send_feedback` | kind, room, summary, details, confirmed | Relays user-initiated, human-confirmed feedback to the support inbox (PII redacted server-side on the relay path). |
+| `get_feedback_form` | — | Form schema, limits, privacy note, and flow for presenting feedback before `send_feedback`. |
+| `check_room_updates` | rooms{} | Diffs recorded blueprint versions against the live product; patch or re-stamp paths. |
+
+`GET /health` reports the live tool count (currently **10** at v0.1.0).
 
 ## Run locally
 
@@ -63,7 +76,7 @@ PII audit fails the build if anything leaks.
 - **Auth.** v0 is public, read-only blueprints — nothing sensitive to protect.
   When the foundry grows write-adjacent tools, add bearer auth and per-key
   rate limits.
-- **Paid tiers.** The 0xray shop model (x402 pay endpoints) fits here when a
-  tool costs something to run.
+- **Paid tiers.** Optional shop extras may be sold on the website later; the
+  house, rooms, and mill remain free.
 - **More rooms.** Room blueprints are data (`data/rooms.json` via
   `scripts/build-data.mjs`) — add rooms without touching the server.
