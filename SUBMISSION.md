@@ -30,7 +30,7 @@ Use this when applying at https://muse.ai/platform (work-email login required).
   Stateless — no session IDs, no `Mcp-Session-Id` header.
 - **Auth:** none. The public blueprint tier needs no key or login.
 - **Health:** `GET https://mymuse.house/health`
-  → `{"status":"ok","service":"muse-house","version":"0.1.0","tools":9,"stateless":true}`
+  → `{"status":"ok","service":"muse-house","version":"0.1.0","tools":10,"stateless":true}`
 - **Tools (10):** `suggest_utilities`, `suggest_steps`, `list_rooms`,
   `get_room_brief`, `get_house_template`, `stamp_rooms`, `codex_check`,
   `send_feedback` (structured kind/room/summary/details; forwards
@@ -85,7 +85,7 @@ Use this when applying at https://muse.ai/platform (work-email login required).
 
 1. `GET /health` → 200, `status: ok`.
 2. `POST /mcp` `initialize` → `serverInfo.name: muse-house`.
-3. `POST /mcp` `tools/list` → 9 tools.
+3. `POST /mcp` `tools/list` → 10 tools.
 4. `POST /mcp` `tools/call suggest_utilities` → ranked connector list.
 5. Open https://mymuse.house/configurator.html,
    complete the 6-step wizard → house pack minted in-browser, setup prompt
