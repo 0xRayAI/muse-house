@@ -1,7 +1,7 @@
 # Muse House — llms.txt
 
 Muse House is a stateless MCP blueprint service that turns a Muse assistant
-into a personal operating house: rooms (Money, Travel, Home, Health, Gaming,
+into a personal operating house: rooms (Money, Travel, Home, Health, Game,
 Art, Dev), a foundry that mints personalized setups, and a mill of daily
 routines.
 
