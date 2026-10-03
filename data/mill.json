@@ -28,37 +28,70 @@
     "morning-briefing": {
       "slug": "morning-briefing",
       "kind": "cron",
-      "title": "Mill — morning briefing",
+      "title": "Mill — morning briefing (flagship)",
       "sections": {
-        "schedule": "Daily, 7:00 AM {{TIMEZONE}} (cron `muse-house-morning-briefing`; loose timing — the result arrives as a chat message + phone push).",
-        "what_it_reads": "1. `house/WAVEBOARD.md` — open and in-flight cards (what's due, what's waiting)\n2. `house/ATTENTION_STATE.md` — what needs the human now\n3. Calendar — today's appointments (device calendar)\n4. Email — overnight arrivals that look like bills or time-sensitive notices\n5. Memory (`muse.memory_search`, `~/MEMORY.md`) — standing commitments,\n   people, preferences that change what today means",
-        "what_it_produces": "A single \"today\" card delivered to the human (chat, notification, or widget —\nnever email unless asked):\n\n```\nTODAY — <Weekday, Month D>\nDue:        <bills/appointments with times, soonest first>\nWaiting on: <cards blocked on other people, one line each>\nNeeds you:  <items from ATTENTION_STATE, max 3>\nHandled:    <anything the house already took care of overnight>\n```\n\nRules:\n- Max ~15 lines. If there's nothing, say \"Nothing needs you today.\" and stop.\n- No PII of other people. No account numbers.\n- Never invent urgency. If a due date is unverified, say \"unverified\".\n- Quiet-when-unchanged does not apply to the briefing itself — it fires daily —\n  but it never fires twice, and it never editorializes.",
-        "prompt_template_for_the_cron_job_": "> You are the host of Amuse House. Build the morning briefing for <OWNER>.\n> Read house/WAVEBOARD.md, house/ATTENTION_STATE.md, today's calendar, last\n> night's email, and memory. Produce the TODAY card in the format above.\n> Confirm-before-send rules apply: the briefing is a read-only summary, so it\n> may be delivered. Anything that would spend, send, or share needs the human.\n> If a source is unreachable, note it in one line and continue — a failing\n> source never blocks the briefing.",
-        "health_checked_by_inspect_": "The briefing ran today if a briefing record exists in the house log or the\nlast-run timestamp is from today. Missing two days in a row = stale."
+        "schedule": "Daily, 7:00 AM {{TIMEZONE}} (cron `muse-house-morning-briefing`; loose timing —\nthe result arrives as a chat message + phone push).",
+        "the_four_questions": "Every briefing answers exactly these, in this order. Nothing else earns\nspace on the card:\n\n```\nTODAY — <Weekday, Month D>\nDue:      <bills due today/tomorrow + appointments with times, soonest first>\nOpen:     <cards blocked on other people or waiting on an outcome, one line each>\nNeeds me: <items from ATTENTION_STATE needing a human decision, max 3>\nHandled:  <what the house already took care of overnight — filed, paid-watch set, confirmed>\n```\n\n- Max ~15 lines. If there's nothing: \"Nothing needs you today.\" Stop.\n- No PII of other people. No account numbers, ever.\n- Never invent urgency. An unverified due date is labeled \"unverified\".\n- Quiet-when-unchanged does not apply to the briefing itself — it fires\n  daily — but it never fires twice and never editorializes.",
+        "what_it_reads_in_order_": "1. `house/WAVEBOARD.md` — open and in-flight cards (due, waiting)\n2. `house/ATTENTION_STATE.md` — what needs the human now\n3. Money: cash position — current balances per account (Plaid), bills due\n   today/tomorrow, any account below its low-balance floor\n4. Calendar — today's appointments (device calendar)\n5. Email — overnight arrivals that look like bills or time-sensitive notices\n6. Memory (`muse.memory_search`, `~/MEMORY.md`) — standing commitments,\n   people, preferences that change what today means",
+        "source_health_checked_every_run_": "Verify each source as you read it. A failing source never blocks the\nbriefing — it gets one line under the card:\n\n```\nSources: bank ✓ · bills ✓ · calendar ✓ · email ✗ (unreachable — will retry tomorrow)\n```\n\nTwo consecutive days with the same source failing = file an ATTENTION card:\nthe human needs to reconnect it. The briefing must never silently pretend\na dead source is fine.",
+        "standalone_mill_health_check": "The host can run this procedure any time (and should, after setup and after\nany connector change): for each source above, perform one read and report\n✓/✗ with the fix path (reconnect link, credential check, or \"ask the human\").\nAll green = the mill can see. Anything red = the briefing degrades honestly\nuntil fixed.",
+        "prompt_template_for_the_cron_job_": "> You are the host of Muse House. Build the morning briefing for <OWNER>.\n> Read house/WAVEBOARD.md, house/ATTENTION_STATE.md, cash position\n> (Plaid balances + today's dues + low-balance floors), today's calendar,\n> last night's email, and memory. Produce the TODAY card in the four-question\n> format above, then the Sources line. Confirm-before-send rules apply: the\n> briefing is a read-only summary, so it may be delivered. Anything that would\n> spend, send, or share needs the human. If a source is unreachable, note it\n> in the Sources line and continue — a failing source never blocks the briefing.",
+        "health_checked_by_inspect_": "The briefing ran today if a briefing record exists in the house log or the\nlast-run timestamp is from today. Missing two days in a row = stale; file an\nATTENTION card."
       }
     },
     "bill-arrived": {
       "slug": "bill-arrived",
-      "kind": "hook",
-      "title": "Hook — bill arrived",
+      "kind": "sweep",
+      "title": "Sweep — bill arrivals",
       "sections": {
-        "how_it_works": "`hooks.add` registers a small polling script (in `~/hooks/scripts/`) that\nchecks the inbox for bill-like messages newer than the last check. The script\nends in one of two words:\n- **silent** — nothing new; the house stays quiet.\n- **wake** — a new bill-like message matched; launches a worker agent with\n  a prompt to file it.\n\nNew hooks start **disabled**; use `hooks.dry_run` to test the script before\nenabling. Polling-based, not a live stream — pick an interval that fits\n(hourly is plenty for bills).",
-        "wake_prompt_what_the_worker_gets_": "> A new bill-like message arrived from <vendor-ish>. Open it (and its\n> attachments if needed), extract vendor / due date / amount, dedup against\n> house/WAVEBOARD.md, and file it as a board card. Flag it if it's past-due,\n> unusually large, or from a first-seen vendor. Report one line to the human.\n> You may not pay, schedule payment for, or contact the vendor — filing only.",
-        "what_it_produces": "- A board card per new bill (vendor / due date / amount).\n- One nudge to the human per genuinely new bill — never for something\n  already filed.",
-        "rules": "- Silent unless something new matches. A hook that cries wolf gets ignored,\n  then disabled.\n- Dedup key: vendor + statement period, not email subject.\n- Unverified amounts are marked \"unverified\" — never guessed.\n- The hook files; it never pays. Payment is ask-first, always.",
-        "health_checked_by_inspect_via_last_run_json_": "The hook's worker records its last wake. A bill that arrived 3+ days ago and\nwas never filed = the hook is broken."
+        "schedule": "3× daily — 8:00 AM, 1:00 PM, 6:00 PM {{TIMEZONE}} (cron `muse-house-bill-sweep`).\nCovers what the morning briefing and bill-watch might miss intraday.",
+        "what_it_does": "1. Read Gmail for bill-like messages newer than the last sweep's watermark\n   (stored in the house log or `house/ATTENTION_STATE.md`).\n2. For each candidate: extract vendor / due date / amount. Mark unverified\n   fields \"unverified\" — never guess.\n3. Dedup against `house/WAVEBOARD.md` (key: vendor + statement period).\n4. File one board card per genuinely new bill (vendor / due date / amount).\n5. Nudge the human one line per new bill — never for something already filed.\n   Flag past-due, unusually large, or first-seen-vendor bills.",
+        "rules": "- Silent unless something new matched. A sweep that cries wolf gets ignored,\n  then disabled — tune the bill-like matcher instead of spamming.\n- The sweep files; it never pays. Payment is ask-first, always.\n- The watermark advances every run, even an empty one.",
+        "health": "A bill that arrived 3+ days ago and was never filed = the sweep is broken;\nfile an ATTENTION card."
+      }
+    },
+    "deploy-watch": {
+      "slug": "deploy-watch",
+      "kind": "sweep",
+      "title": "Sweep — deploy watch",
+      "sections": {
+        "schedule": "Every 2 hours during the human's waking hours (cron `muse-house-deploy-sweep`).",
+        "what_it_does": "1. Check the connected deploy sources (GitHub Actions, Railway, Vercel —\n   whatever the human connected) for deployments since the last watermark.\n2. For each new deploy: confirm success quietly to the Dev room log, or\n   flag failures loudly — one nudge with the failing step and a link.\n3. Advance the watermark every run.",
+        "rules": "- Success is quiet (log only); failure always nudges.\n- Never roll back, redeploy, or change config — report only.\n- Dedup on deploy id, not message text.",
+        "health": "A failed deploy older than one sweep interval with no nudge = broken."
+      }
+    },
+    "lab-result-watch": {
+      "slug": "lab-result-watch",
+      "kind": "sweep",
+      "title": "Sweep — lab result watch",
+      "sections": {
+        "schedule": "2× daily — 8:00 AM, 8:00 PM {{TIMEZONE}} (cron `muse-house-lab-sweep`).",
+        "what_it_does": "1. Check the connected inbox / patient portal for lab-result messages since\n   the last watermark.\n2. File one HEALTH board card per new result (test / date / source). One\n   quiet nudge: \"New lab result filed.\"\n3. Never interpret, diagnose, or explain results — filing only. The human\n   reads them with their clinician.",
+        "rules": "- Filing only, always. No medical interpretation, ever.\n- Dedup on test + date, not subject line.\n- Results are health data: never share, never summarize to anyone but\n  the human.",
+        "health": "A result older than 24 hours, unfiled = broken."
       }
     },
     "low-balance": {
       "slug": "low-balance",
-      "kind": "hook",
-      "title": "Hook — low balance",
+      "kind": "sweep",
+      "title": "Sweep — low balances",
       "sections": {
-        "how_it_works": "`hooks.add` registers a polling script that reads balances via the Plaid\nconnector (read-only) and compares each account against its floor. Ends in:\n- **silent** — all balances above their floors.\n- **wake** — an account dropped below its floor; launches a worker agent.\n\nNew hooks start **disabled**; use `hooks.dry_run` to test before enabling.\nFloors are set by the human during onboarding (and can be changed any time);\nthe hook never invents one.",
-        "wake_prompt_what_the_worker_gets_": "> <account nickname> dropped below its floor of <amount>: current balance\n> <balance>. Check house/WAVEBOARD.md for bills due in the next 7 days\n> against this account. File (or update) a LOW-BALANCE board card with the\n> numbers, and tell the human plainly what's short and which bills are at\n> risk. Read-only: you may not move money, schedule payments, or contact\n> anyone.",
-        "what_it_produces": "- A LOW-BALANCE board card: account, floor, current balance, bills at risk\n  in the next 7 days.\n- One plain-language nudge: what's short, what's at risk, no lecture.",
-        "rules": "- One nudge per crossing — not one per poll. The worker records the alert\n  on the card so repeats stay silent until the balance recovers.\n- Balances are read-only. The hook watches; the human decides.\n- Never share balances with anyone but the human.",
-        "health_checked_by_inspect_via_last_run_json_": "The hook's worker records its last wake. A stale hook with an un-alerted\nshortfall = broken."
+        "schedule": "2× daily — 9:00 AM, 4:00 PM {{TIMEZONE}} (cron `muse-house-balance-sweep`).",
+        "what_it_does": "1. Read current balances per account (Plaid).\n2. Compare against the per-account low-balance floors in `house/HOUSE.md`.\n   No floors set = the sweep reports \"floors not set\" once, then stays quiet\n   until the human sets them — it never invents a threshold.\n3. For each account below its floor: check `house/WAVEBOARD.md` for bills\n   due in the next 7 days against this account; file/update a LOW-BALANCE\n   board card (account / balance / floor / gap / bills at risk) and tell the\n   human plainly what's short, one line, no lecture.\n4. Clear the card when the account recovers above its floor.",
+        "rules": "- One nudge per crossing, not per sweep. An account sitting below its floor\n  does not re-nudge every run.\n- Never move money. The sweep watches and warns; transfers are ask-first.\n- No account numbers in cards or nudges — nicknames only.",
+        "health": "A sweep that can't reach Plaid twice in a row = file an ATTENTION card;\nthe morning briefing's Sources line will already show it."
+      }
+    },
+    "price-watch": {
+      "slug": "price-watch",
+      "kind": "sweep",
+      "title": "Sweep — price watch",
+      "sections": {
+        "schedule": "1× daily — 9:00 AM {{TIMEZONE}} (cron `muse-house-price-sweep`); the Travel\nroom may raise it to 2× daily around a booked trip.",
+        "what_it_does": "1. For each trip on the Travel room's watch list, check the current fare\n   against the tracked price.\n2. On a meaningful change (drop ≥ 5% or any increase on a booked fare):\n   one nudge with old → new and the rebook math.\n3. Small noise stays silent — the room logs it, the human never sees it.",
+        "rules": "- Report, never book. Booking is ask-first, always.\n- One nudge per change, not per sweep.\n- Tracked trips come from the Travel room's TRIP-PLAN cards — the sweep\n  never invents a watch.",
+        "health": "A tracked fare with no check in 48 hours = broken."
       }
     }
   }

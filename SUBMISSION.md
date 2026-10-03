@@ -31,15 +31,17 @@ Use this when applying at https://muse.ai/platform (work-email login required).
 - **Auth:** none. The public blueprint tier needs no key or login.
 - **Health:** `GET https://mymuse.house/health`
   → `{"status":"ok","service":"muse-house","version":"0.1.0","tools":9,"stateless":true}`
-- **Tools (9):** `suggest_utilities`, `suggest_steps`, `list_rooms`,
+- **Tools (10):** `suggest_utilities`, `suggest_steps`, `list_rooms`,
   `get_room_brief`, `get_house_template`, `stamp_rooms`, `codex_check`,
   `send_feedback` (structured kind/room/summary/details; forwards
   user-initiated feedback to the support inbox; only to be called when the
   human explicitly asks AND confirms the exact text; PII redacted
   server-side), `get_feedback_form` (the form schema for consistent
-  presentation)
+  presentation), `check_room_updates` (diff the house's recorded room
+  blueprint versions against the live product; returns upgrades with a
+  patch or re-stamp path)
 - **Test calls for review:**
-  - `tools/list` → 9 tools
+  - `tools/list` → 10 tools
   - `tools/call get_room_brief {"room":"money"}` → full Money Room blueprint
   - `tools/call stamp_rooms {"rooms":"health","owner_name":"Alex"}` → executable room-creation protocol
   - `tools/call codex_check {"action":"pay the electric bill"}` → FLAG with term cited

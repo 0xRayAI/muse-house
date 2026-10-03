@@ -56,6 +56,9 @@ const MILL_SLUGS = [
   ["evening-wrap", ["evening wrap"]],
   ["bill-arrived", ["bill-arrived"]],
   ["low-balance", ["low-balance"]],
+  ["deploy-watch", ["deploy watch"]],
+  ["lab-result-watch", ["lab result watch"]],
+  ["price-watch", ["price watch"]],
 ];
 
 function millSpecsFor(millJobsText = "") {
@@ -81,6 +84,7 @@ for (const file of readdirSync(join(SRC, "rooms")).filter((f) => f.endsWith(".md
     id,
     name: title,
     description: oneLiner,
+    version: (sections.version || "1").trim().split("\n")[0].trim(),
     sections: {
       purpose,
       connectors_needed: sections.connectors_needed || "",
@@ -91,6 +95,7 @@ for (const file of readdirSync(join(SRC, "rooms")).filter((f) => f.endsWith(".md
       seed_brief: sections.seed_brief || "",
       setup_flow: sections.setup_flow || "",
       skills: sections.skills || "",
+      changelog: sections.changelog || "",
     },
     mill_specs: millSpecsFor(sections.mill_jobs || ""),
   });
@@ -98,7 +103,7 @@ for (const file of readdirSync(join(SRC, "rooms")).filter((f) => f.endsWith(".md
 
 // ---------- mill specs ----------
 const mill = {};
-const millDirs = [["cron-jobs", "cron"], ["hooks", "hook"]];
+const millDirs = [["cron-jobs", "cron"], ["hooks", "sweep"]];
 for (const [dir, kind] of millDirs) {
   for (const file of readdirSync(join(SRC, "mill", dir)).filter((f) => f.endsWith(".md")).sort()) {
     const slug = file.replace(/\.md$/, "");

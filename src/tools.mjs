@@ -77,7 +77,7 @@ export function buildSteps(goal = "", utilities = []) {
   for (const u of known) steps.push({ title: u, detail: UTILITY_STEPS[u] });
   steps.push({ title: "Mint the house", detail: "Call get_house_template with the onboarding answers; the host writes house/HOUSE.md and house/OP-PROC.md." });
   steps.push({ title: "Stamp rooms", detail: "Call list_rooms, then get_room_brief for each room the household wants; the host opens one side chat per room and seeds it with the brief." });
-  steps.push({ title: "Start the mill", detail: "Create the cron jobs (morning briefing, bill watch, evening wrap) and hooks (bill-arrived, low-balance) from the room briefs' mill specs. New hooks start disabled — dry-run before enabling." });
+  steps.push({ title: "Start the mill", detail: "Create the cron jobs (morning briefing, bill watch, evening wrap) and sweeps (bill arrivals, low balances, etc.) from the room briefs' mill specs. Sweeps are frequent crons, not event hooks — they poll on a schedule with your credentials." });
   steps.push({ title: "First briefing", detail: "Run the morning-briefing prompt once by hand to prove every source reads, then let the schedule take over." });
   return { goal: goal || "(no goal given)", steps, unknown };
 }
@@ -91,8 +91,8 @@ export function suggest_steps({ goal = "", utilities = [] }) {
 
 // ---------------------------------------------------------------- list_rooms
 export function list_rooms() {
-  const lines = rooms.map((r) => `- **${r.name}** (\`${r.id}\`) — ${r.description}`);
-  return text(`House rooms — one specialist side chat each. Call get_room_brief with the room id for the full blueprint.\n\n${lines.join("\n")}`);
+  const lines = rooms.map((r) => `- **${r.name}** (\`${r.id}\`, v${r.version}) — ${r.description}`);
+  return text(`House rooms — one specialist side chat each. Call get_room_brief with the room id for the full blueprint. Call check_room_updates with your rooms' current versions to see what's new.\n\n${lines.join("\n")}`);
 }
 
 // ---------------------------------------------------------------- get_room_brief
@@ -126,7 +126,7 @@ export function get_room_brief({ room = "" }) {
     })
     .join("\n\n---\n\n");
   return text(
-    `# Room brief: ${r.name}\n\n## Purpose\n${s.purpose}\n\n## Connectors needed\n${s.connectors_needed}\n\n${s.skills ? `## Skills\n${s.skills}\n\n` : ""}## Onboarding fills\n${s.onboarding_fills}\n\n## Mill jobs\n${s.mill_jobs}\n\n## Board cards it files\n${s.board_cards_it_files}\n\n## Ask-first list\n${s.ask_first_list}\n\n## Seed brief (host gives this to the side chat, filling {{OWNER_NAME}})\n${s.seed_brief}\n\n${s.setup_flow ? `## Setup flow\n${s.setup_flow}\n\n` : ""}---\n\n${specTexts}\n\n---\n\n**How the host stamps this room:** \`chat.create\` (fresh side chat) → paste the seed brief with {{OWNER_NAME}} filled → file the board-cards template → create the cron jobs and hooks from the mill specs above.`
+    `# Room brief: ${r.name}\n\n## Purpose\n${s.purpose}\n\n## Connectors needed\n${s.connectors_needed}\n\n${s.skills ? `## Skills\n${s.skills}\n\n` : ""}## Onboarding fills\n${s.onboarding_fills}\n\n## Mill jobs\n${s.mill_jobs}\n\n## Board cards it files\n${s.board_cards_it_files}\n\n## Ask-first list\n${s.ask_first_list}\n\n## Seed brief (host gives this to the side chat, filling {{OWNER_NAME}})\n${s.seed_brief}\n\n${s.setup_flow ? `## Setup flow\n${s.setup_flow}\n\n` : ""}---\n\n${specTexts}\n\n---\n\n**How the host stamps this room:** \`chat.create\` (fresh side chat) → paste the seed brief with {{OWNER_NAME}} filled → file the board-cards template → create the cron jobs and sweeps from the mill specs above.`
   );
 }
 
@@ -267,6 +267,79 @@ export async function send_feedback(args = {}) {
   return text(`Feedback sent to the Muse House team. Thank the human and move on.${note}`);
 }
 
+// ---------------------------------------------------------------- check_room_updates
+// How Muse-in-another-house knows a room has been upgraded: every room
+// blueprint carries a ## Version and ## Changelog; the house records its
+// rooms' versions (get_house_template ships a tracking table); this tool
+// diffs them. Stateless — the house holds its versions, the service holds
+// the truth. Run it weekly (e.g. in the Sunday review).
+//
+// Changelog entry format (authored in the blueprint):
+//   - v2 (patch:skills): Added the icon-art skill.
+//   - v3 (re-stamp): Seed brief rewritten; full re-stamp required.
+// Path is patch (send the patch message to the existing room chat — history
+// preserved) or re-stamp (export state, recreate via stamp_rooms, restore).
+function parseChangelog(text = "") {
+  const entries = [];
+  for (const line of text.split("\n")) {
+    const m = line.match(/^\s*-\s*v(\d+)\s*\((baseline|patch(?::[a-z_0-9,]+)?|re-stamp)\)\s*:\s*(.+)$/);
+    if (m) entries.push({ version: parseInt(m[1], 10), kind: m[2], text: m[3].trim() });
+  }
+  return entries.sort((a, b) => a.version - b.version);
+}
+
+export function check_room_updates({ rooms: versions = {} } = {}) {
+  const ids = rooms.map((r) => r.id);
+  const unknown = Object.keys(versions).filter((k) => !ids.includes(k.toLowerCase().trim()));
+  const blocks = [];
+  for (const r of rooms) {
+    const latest = parseInt(r.version, 10) || 1;
+    const raw = versions[r.id];
+    const current = raw === undefined || raw === null || raw === "" ? null : parseInt(raw, 10);
+    if (current === null || isNaN(current)) {
+      blocks.push(
+        `- **${r.name}** (\`${r.id}\`): no version recorded — latest is v${latest}. ` +
+        `Record v${latest} as your baseline (get_house_template has a tracking table) and re-check.`
+      );
+      continue;
+    }
+    if (current >= latest) continue;
+    const entries = parseChangelog(r.sections.changelog || "").filter((e) => e.version > current);
+    const entryLines = entries.length
+      ? entries.map((e) => `  - v${e.version} (${e.kind}): ${e.text}`).join("\n")
+      : `  - (no changelog entries parsed between v${current} and v${latest})`;
+    const needsRestamp = entries.some((e) => e.kind === "re-stamp");
+    if (needsRestamp) {
+      blocks.push(
+        `- **${r.name}** (\`${r.id}\`): v${current} → v${latest} — **re-stamp required**.\n${entryLines}\n` +
+        `  Path: export the room's state (memory, board cards, mill jobs), delete the side chat, ` +
+        `re-create it with stamp_rooms (rooms=\"${r.id}\"), restore state, re-approve mill jobs with the human.`
+      );
+    } else {
+      const sectionNames = [...new Set(entries.flatMap((e) => {
+        const m = e.kind.match(/^patch:(.+)$/);
+        return m ? m[1].split(",").map((s) => s.trim()) : [];
+      }))].filter((s) => r.sections[s]);
+      const patchBody = sectionNames.length
+        ? sectionNames.map((s) => `## ${s}\n${r.sections[s]}`).join("\n\n")
+        : `Call get_room_brief for \`${r.id}\` and diff against your room's seed to find what changed.`;
+      blocks.push(
+        `- **${r.name}** (\`${r.id}\`): v${current} → v${latest} — **patch** (history preserved).\n${entryLines}\n` +
+        `  Path: send this as a message to the existing room chat:\n\n` +
+        `  ---\nProduct update: your blueprint is now v${latest} (you have v${current}). What's new:\n${entries.map((e) => `- v${e.version}: ${e.text}`).join("\n")}\n\n${patchBody}\n  ---`
+      );
+    }
+  }
+  const unknownNote = unknown.length
+    ? `\n\nNote: unknown room id(s) in your records (retired or typo): ${unknown.map((u) => `\`${u}\``).join(", ")}.`
+    : "";
+  if (!blocks.length) return text(`All room blueprints are current.${unknownNote}`);
+  return text(
+    `Room upgrades available — run this weekly so rooms never go stale.\n\n${blocks.join("\n\n")}${unknownNote}\n\n` +
+    `After applying, record the new versions in your house's room-versions table.`
+  );
+}
+
 /** get_feedback_form — the form schema, so hosts present it consistently. */
 export function get_feedback_form() {
   const f = getFeedbackForm();
@@ -378,5 +451,21 @@ export const TOOL_DEFS = [
     description: "Returns the feedback form schema: fields, allowed values, length limits, and the privacy note to show the human. Call this when the human wants to send feedback, present the fields conversationally, then show them the exact text and get an explicit yes before calling send_feedback.",
     inputSchema: { type: "object", properties: {} },
     fn: get_feedback_form,
+  },
+  {
+    name: "check_room_updates",
+    description: "Diff your house's recorded room blueprint versions against the live product. Pass {rooms: {art: 1, money: 1, ...}} with the versions your house tracks (get_house_template ships a room-versions table). Returns per-room upgrades: latest version, changelog since yours, and the upgrade path — 'patch' (send the included message to the existing room chat; history preserved) or 're-stamp' (export state, recreate via stamp_rooms, restore). Run weekly so rooms never go stale.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        rooms: {
+          type: "object",
+          description: "Map of room id to the blueprint version your house recorded, e.g. {\"art\": 1, \"money\": 1}",
+          additionalProperties: { type: ["integer", "string"] },
+        },
+      },
+      required: ["rooms"],
+    },
+    fn: check_room_updates,
   },
 ];

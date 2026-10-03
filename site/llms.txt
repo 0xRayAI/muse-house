@@ -23,7 +23,7 @@ routines.
 None. The public blueprint tier needs no key or login. The service is
 stateless and stores no user data.
 
-## MCP tools (9)
+## MCP tools (10)
 
 - suggest_utilities(profile, goal): rank Muse connectors a household should
   turn on, with a one-line why each.
@@ -43,6 +43,10 @@ stateless and stores no user data.
   redacts obvious patterns server-side. Rate-limited; nothing is stored.
 - get_feedback_form(): the feedback form schema — fields, allowed values,
   limits, privacy note. Present it conversationally before send_feedback.
+- check_room_updates(rooms): diff the house's recorded room blueprint
+  versions against the live product; returns upgrades with a patch
+  (send to the room chat) or re-stamp (recreate via stamp_rooms) path.
+  Run weekly.
 
 ## Usage pattern
 
