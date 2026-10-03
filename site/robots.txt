@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://muse-house-production.up.railway.app/sitemap.xml
+Sitemap: https://mymuse.house/sitemap.xml
