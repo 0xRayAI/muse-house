@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How it's built — Muse House</title>
+<meta name="description" content="The technical architecture of Muse House: an MCP blueprint service, stateless by design, open source.">
+<link rel="canonical" href="https://mymuse.house/tech.html">
+<meta name="robots" content="index, follow">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Muse House">
+<meta property="og:title" content="How it's built — Muse House">
+<meta property="og:description" content="An MCP blueprint service, stateless by design, open source.">
+<meta property="og:url" content="https://mymuse.house/tech.html">
+<link rel="stylesheet" href="/styles.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⌂</text></svg>">
+</head>
+<body>
+<header class="nav">
+  <a class="brand" href="/"><span class="brand-mark">⌂</span> Muse House</a>
+  <nav class="nav-links"><a href="/">Home</a><a href="/configurator.html">Set up my house</a><a href="/help.html">Help</a></nav>
+</header>
+<main class="doc">
+  <p class="eyebrow">How it's built</p>
+  <h1>An MCP service, stateless by design.</h1>
+  <p class="updated">For the technically curious. Everyone else: <a href="/#how">here's how it works</a>.</p>
+
+  <h2>The shape of it</h2>
+  <p>Muse House is an external <strong>MCP (Model Context Protocol) service</strong>, consumed through a custom Muse connector. It speaks Streamable HTTP on a single <code>/mcp</code> endpoint and answers every request with one plain JSON body — no Server-Sent Events, no sessions, no streaming. Boring on purpose: it's the most compatible shape for review pipelines and egress proxies.</p>
+
+  <h2>The endpoint</h2>
+  <p><code>POST https://mymuse.house/mcp</code> · <code>GET https://mymuse.house/health</code></p>
+  <p>No authentication on the public blueprint tier. No accounts, no API keys, no login walls.</p>
+
+  <h2>Nine tools</h2>
+  <p><strong>Blueprints:</strong> <code>suggest_utilities</code> ranks which Muse connectors a household should turn on. <code>suggest_steps</code> builds the operating plan. <code>list_rooms</code> and <code>get_room_brief</code> serve the seven room blueprints. <code>get_house_template</code> mints starter HOUSE.md / OP-PROC.md. <code>stamp_rooms</code> returns the executable room-creation protocol the host agent follows.</p>
+  <p><strong>Governance:</strong> <code>codex_check</code> runs a planned action against the 22-term consumer codex — advisory, not a gate.</p>
+  <p><strong>Feedback:</strong> <code>send_feedback</code> relays structured, user-confirmed feedback to the team inbox (personal data redacted server-side); <code>get_feedback_form</code> serves the form schema so hosts present it consistently.</p>
+
+  <h2>Stateless means stateless</h2>
+  <p>The service stores nothing: no user data, no conversation history, no identifiers. Tool arguments are not persisted. Your board, routines, approvals, and connected accounts live inside your own Muse — never here. Feedback messages are forwarded to the support inbox and forgotten; only anonymous rate-limit counters exist, in memory, never on disk. <a href="/privacy.html">The privacy policy</a> says the same thing at greater length.</p>
+
+  <h2>Open source</h2>
+  <p>The whole thing is public: <a href="https://github.com/0xRayAI/muse-house" target="_blank" rel="noopener">0xRayAI/muse-house</a> (MIT). Run it yourself with <code>node src/server.mjs</code> — the Dockerfile is in the repo. Machine-readable docs live at <a href="/llms.txt">llms.txt</a>.</p>
+
+  <h2>Status</h2>
+  <p>Submitted to the Muse Connector Directory; in review. Until then, add it as a custom connector — <a href="/#start">the homepage walks through it</a>.</p>
+</main>
+<footer>
+  <p><span class="brand-mark">⌂</span> Muse House · by 0xRayAI · <a href="https://github.com/0xRayAI/muse-house" target="_blank" rel="noopener">GitHub</a> · <a href="/help.html">Help</a> · <a href="/tech.html">Tech</a> · <a href="/privacy.html">Privacy</a> · <a href="/terms.html">Terms</a></p>
+</footer>
+</body>
+</html>

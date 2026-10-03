@@ -16,6 +16,7 @@ routines.
 - Source: https://github.com/0xRayAI/muse-house
 - Help & feedback: https://mymuse.house/help.html (form POSTs to /api/feedback,
   forwarded via Resend to support@mymuse.house; nothing stored server-side)
+- Tech architecture: https://mymuse.house/tech.html
 
 ## Auth
 
