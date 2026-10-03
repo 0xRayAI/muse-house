@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bling — trinkets, gizmos &amp; delights — Muse House</title>
+<meta name="description" content="Little extras for your Muse House. Trinkets, gizmos, and surprise delights — pay securely with Stripe.">
+<link rel="canonical" href="https://mymuse.house/bling.html">
+<meta name="robots" content="index, follow">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Muse House">
+<meta property="og:title" content="Bling — trinkets, gizmos &amp; delights">
+<meta property="og:description" content="Little extras for your Muse House. Pay securely with Stripe.">
+<meta property="og:url" content="https://mymuse.house/bling.html">
+<link rel="stylesheet" href="/styles.css">
+<link rel="icon" type="image/svg+xml" href="/icon.svg">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<style>
+  .bling-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1rem; margin: 1rem 0 2.5rem; }
+  .bling-card { border: 1px solid #e5e0d8; border-radius: 14px; padding: 1.25rem; background: #fff; display: flex; flex-direction: column; gap: .5rem; }
+  .bling-card .kind { font-size: .72rem; text-transform: uppercase; letter-spacing: .12em; color: #a08c6a; }
+  .bling-card h3 { margin: 0; font-size: 1.1rem; }
+  .bling-card p { margin: 0; color: #5c554a; flex: 1; }
+  .bling-card .price { font-weight: 700; font-size: 1.25rem; }
+  .bling-card button { margin-top: .5rem; padding: .7rem 1rem; border: none; border-radius: 10px; background: #1c1a17; color: #fff; font-size: 1rem; cursor: pointer; }
+  .bling-card button:disabled { background: #b9b2a6; cursor: default; }
+  .bling-banner { border-radius: 12px; padding: 1rem 1.25rem; margin: 1rem 0; display: none; }
+  .bling-banner.ok { display: block; background: #e9f7ee; border: 1px solid #9fd8b4; }
+  .bling-banner.info { display: block; background: #f4f1ea; border: 1px solid #e5e0d8; }
+  .fineprint { font-size: .85rem; color: #8a8175; }
+</style>
+</head>
+<body>
+<header class="nav">
+  <a class="brand" href="/"><img class="brand-mark" src="/icon.svg" alt="Muse House" width="26" height="26"> Muse House</a>
+  <nav class="nav-links"><a href="/">Home</a><a href="/configurator.html">Set up my house</a><a href="/bling.html">Bling</a><a href="/help.html">Help</a></nav>
+</header>
+<main class="doc">
+  <p class="eyebrow">💎 Bling</p>
+  <h1>Little extras for your house.</h1>
+  <p class="updated">Trinkets, gizmos, and surprise delights. Pay securely — we never see your card number.</p>
+
+  <div id="banner-bought" class="bling-banner ok" role="status">
+    <strong>You're in! 🎉</strong> <span id="bought-item"></span> Your delight is on its way —
+    check your email for delivery details.
+  </div>
+  <div id="banner-cancelled" class="bling-banner info" role="status">
+    No worries — the checkout was cancelled and nothing was charged.
+  </div>
+  <div id="banner-soon" class="bling-banner info" role="status" style="display:none">
+    The Bling shop is opening soon — check back shortly.
+  </div>
+
+  <div id="catalog"><p>Loading the goods…</p></div>
+
+  <p class="fineprint">Payments are processed securely by Stripe. Muse House never sees or
+  stores your card number — checkout happens on Stripe's own page, and all
+  we get is a confirmation that your order went through. Digital goods are
+  delivered to the email you use at checkout. <a href="/terms.html">Terms</a> · <a href="/privacy.html">Privacy</a></p>
+</main>
+<script>
+(async function () {
+  const params = new URLSearchParams(location.search);
+  if (params.get("bought") === "1") {
+    document.getElementById("banner-bought").style.display = "block";
+    const item = params.get("item");
+    if (item) document.getElementById("bought-item").textContent = "Thanks for grabbing the " + item.replace(/-/g, " ") + ".";
+  }
+  if (params.get("cancelled") === "1") {
+    document.getElementById("banner-cancelled").style.display = "block";
+  }
+
+  const box = document.getElementById("catalog");
+  let catalog;
+  try {
+    const res = await fetch("/api/bling/catalog");
+    catalog = await res.json();
+  } catch (e) {
+    box.innerHTML = "<p>Couldn't load the catalog right now — try again in a bit.</p>";
+    return;
+  }
+  const groups = [["trinket", "✨ Trinkets"], ["gizmo", "🔧 Gizmos"], ["delight", "🎁 Delights"]];
+  box.innerHTML = "";
+  for (const [kind, label] of groups) {
+    const items = (catalog.items || []).filter((i) => i.kind === kind);
+    if (!items.length) continue;
+    const h = document.createElement("h2");
+    h.textContent = label;
+    box.appendChild(h);
+    const grid = document.createElement("div");
+    grid.className = "bling-grid";
+    for (const item of items) {
+      const card = document.createElement("div");
+      card.className = "bling-card";
+      const price = "$" + (item.price_cents / 100).toFixed(item.price_cents % 100 ? 2 : 0);
+      card.innerHTML =
+        '<div class="kind">' + label + "</div><h3></h3><p></p>" +
+        '<div class="price">' + price + '</div><button type="button">Buy with Stripe</button>';
+      card.querySelector("h3").textContent = item.name;
+      card.querySelector("p").textContent = item.description;
+      const btn = card.querySelector("button");
+      btn.addEventListener("click", async () => {
+        btn.disabled = true;
+        btn.textContent = "Taking you to checkout…";
+        try {
+          const res = await fetch("/api/bling/checkout", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ item_id: item.id }),
+          });
+          const data = await res.json();
+          if (data.url) {
+            location.href = data.url;
+          } else if (data.error === "payments_not_configured") {
+            document.getElementById("banner-soon").style.display = "block";
+            btn.disabled = false;
+            btn.textContent = "Buy with Stripe";
+          } else {
+            btn.disabled = false;
+            btn.textContent = "Something went wrong — try again";
+          }
+        } catch (e) {
+          btn.disabled = false;
+          btn.textContent = "Something went wrong — try again";
+        }
+      });
+      grid.appendChild(card);
+    }
+    box.appendChild(grid);
+  }
+  if (!box.children.length) box.innerHTML = "<p>The shelves are empty right now — check back soon.</p>";
+})();
+</script>
+</body>
+</html>

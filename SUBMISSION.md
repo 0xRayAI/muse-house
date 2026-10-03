@@ -9,7 +9,7 @@ Use this when applying at https://muse.ai/platform (work-email login required).
 - **Category:** Productivity / Personal organization
 - **Description:** Muse House turns a Muse assistant into a personal operating
   house. The Foundry mints a personalized setup from a short configurator —
-  seven rooms (Money, Travel, Home, Health, Game, Art, Dev), each becoming its
+  nine rooms (Money, Travel, Home, Health, Game, Art, Dev, Coach, Bling), each becoming its
   own side chat — and the Mill runs daily routines: a morning briefing, bill
   watch, nudges, and an evening wrap. Rooms are conversational companions, not
   dashboards: Art generates and iterates on images, Money tracks budgets
@@ -79,7 +79,7 @@ Use this when applying at https://muse.ai/platform (work-email login required).
 - **Developer:** 0xRayAI
 - **Support:** GitHub issues at https://github.com/0xRayAI/muse-house/issues,
   help form at https://mymuse.house/help.html, or email support@mymuse.house
-- **Monetization:** none at launch (free public blueprint tier).
+- **Monetization:** the Bling shop sells optional digital extras (trinkets, gizmos, delights) via Stripe Checkout; the house, rooms, and mill remain free.
 
 ## Reviewer walkthrough (end-to-end test)
 

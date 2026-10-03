@@ -20,7 +20,7 @@
  */
 const RESEND_URL = "https://api.resend.com/emails";
 export const FEEDBACK_KINDS = ["Help", "Feedback", "Bug report", "Feature idea"];
-export const FEEDBACK_ROOMS = ["money", "travel", "home", "health", "game", "art", "dev", "website", "other"];
+export const FEEDBACK_ROOMS = ["money", "travel", "home", "health", "game", "art", "dev", "coach", "bling", "website", "other"];
 const MAX_SUMMARY = 150;
 const MAX_DETAILS = 2000;
 

@@ -413,7 +413,7 @@ export const TOOL_DEFS = [
     inputSchema: {
       type: "object",
       properties: {
-        rooms: { type: "string", description: "Comma-separated room ids (e.g. 'money,travel'). Omit for all seven rooms." },
+        rooms: { type: "string", description: "Comma-separated room ids (e.g. 'money,travel'). Omit for all nine rooms." },
         owner_name: { type: "string", description: "Owner's first name, filled into each seed brief" },
       },
     },

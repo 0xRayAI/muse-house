@@ -13,6 +13,36 @@
         "health_checked_by_inspect_": "Bill watch ran today if its last-run record is from today. A bill that\narrived 3+ days ago and was never filed = the watch is broken."
       }
     },
+    "bling-drops": {
+      "slug": "bling-drops",
+      "kind": "cron",
+      "title": "Mill — bling drops",
+      "sections": {
+        "schedule": "Weekly (cron `bling-drops`; day/time set with the human at onboarding;\nloose timing). Plus event-driven: the Stripe webhook fires the purchase\nfollow-up within the hour.",
+        "what_it_reads": "1. `GET /api/bling/catalog` — current trinkets, gizmos, delights.\n2. `house/WAVEBOARD.md` — ORDER and WISHLIST cards (what's owned, what's wanted).\n3. Memory — the human's fun-money comfort zone and taste.",
+        "what_it_produces": "- **Drop alert:** new items since last check, one short message. Items\n  above the human's comfort zone are noted honestly, not hidden — but\n  never pushed. No alert when nothing is new (quiet-when-unchanged).\n- **Purchase follow-up:** after a completed Stripe checkout, confirm the\n  delight landed and help apply it (theme, icon pack, report). File an\n  ORDER card: item / date / amount / delivered.\n\nRules:\n- **Never initiates a purchase.** Every buy happens on the site, by the\n  human, explicitly. The room links; it never charges.\n- **Never handles card details.** Checkout lives on the Bling shop page\n  via Stripe — card numbers never touch chat, the room, or the house.\n- **Offered, never pushed.** One announcement per drop. No countdown\n  timers, no \"last chance\" pressure.\n- Respect the fun-money zone: flag over-budget items honestly."
+      }
+    },
+    "coach-checkin": {
+      "slug": "coach-checkin",
+      "kind": "cron",
+      "title": "Mill — coach check-in",
+      "sections": {
+        "schedule": "Twice daily (crons `coach-morning` and `coach-evening`, times set with the\nhuman at onboarding; loose timing). Quiet-when-unchanged does not apply —\nthe check-in IS the product — but a \"still on track ✓\" is one line, not\na paragraph.",
+        "what_it_reads": "1. `house/WAVEBOARD.md` — GOAL and HABIT cards: what's active, current streaks.\n2. Memory — the human's goals, habits, coaching-style preference.\n3. Calendar — what's today demands (so intentions stay realistic).",
+        "what_it_produces": "- **Morning:** one intention for the day, tied to an active goal or habit.\n  Short. Specific. Achievable today.\n- **Evening:** the honest review — done / partial / missed, and what got\n  in the way. Misses get curiosity (\"what got in the way?\"), never guilt.\n  Streaks updated on the board.\n- A one-line summary for the human when there's nothing to discuss:\n  \"Streaks intact. See you tomorrow.\"\n\nRules:\n- **Never shames.** A missed day is data, not failure.\n- **Never moves the goalposts.** Changing or dropping a goal is the\n  human's call — Coach proposes, the human decides.\n- One message per check-in. Coach is a cornerman, not a lecture.\n- Health-adjacent goals stay in scope (train 3×/week); medical advice is\n  out of scope — that goes to Health."
+      }
+    },
+    "coach-weekly-review": {
+      "slug": "coach-weekly-review",
+      "kind": "cron",
+      "title": "Mill — coach weekly review",
+      "sections": {
+        "schedule": "Weekly (cron `coach-weekly-review`; day/time set with the human at\nonboarding; loose timing).",
+        "what_it_reads": "1. `house/WAVEBOARD.md` — GOAL, HABIT, and REVIEW cards for the week.\n2. Memory — longer-term goals and past reviews (patterns across weeks).",
+        "what_it_produces": "- **Wins** — what got done, streaks kept. Celebrated, specifically.\n- **Misses** — what slipped, and the pattern if there is one (same\n  excuse three weeks running is a plan problem, not a willpower problem).\n- **One adjustment** — exactly one change for next week. Not five.\n  The smallest change most likely to work.\n- Files a REVIEW card: week / wins / misses / next week's adjustment.\n\nRules:\n- **Exactly one adjustment.** More than one is a wish list.\n- **Celebrate specifically.** \"You kept the streak\" beats \"great job.\"\n- **Patterns over incidents.** One missed day is life; three is information.\n- The human approves the adjustment before it becomes a plan."
+      }
+    },
     "evening-wrap": {
       "slug": "evening-wrap",
       "kind": "cron",

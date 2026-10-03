@@ -28,7 +28,7 @@ stateless and stores no user data.
 - suggest_utilities(profile, goal): rank Muse connectors a household should
   turn on, with a one-line why each.
 - suggest_steps(goal, utilities): ordered operating plan the host executes.
-- list_rooms(): the seven room blueprints with one-line descriptions.
+- list_rooms(): the nine room blueprints with one-line descriptions.
 - get_room_brief(room): full blueprint — purpose, connectors, onboarding
   fills, mill jobs with specs, board cards, ask-first list, side-chat seed.
 - get_house_template(owner_name?, timezone?): starter HOUSE.md + OP-PROC.md

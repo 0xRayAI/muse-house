@@ -18,6 +18,7 @@ import { TOOL_DEFS } from "./tools.mjs";
 import { handleApi } from "./api.mjs";
 import { handleApiTemplate } from "./api.mjs";
 import { handleFeedbackPost } from "./feedback.mjs";
+import { handleBlingCatalog, handleBlingCheckout, handleBlingWebhook } from "./bling.mjs";
 
 const SERVICE = "muse-house";
 const VERSION = "0.1.0";
@@ -129,6 +130,15 @@ function readBody(req) {
   });
 }
 
+function readRawBody(req) {
+  return new Promise((resolve, reject) => {
+    const chunks = [];
+    req.on("data", (c) => chunks.push(c));
+    req.on("end", () => resolve(Buffer.concat(chunks)));
+    req.on("error", reject);
+  });
+}
+
 const http = createServer(async (req, res) => {
   try {
     if (req.method === "GET" && req.url === "/health") {
@@ -156,6 +166,31 @@ const http = createServer(async (req, res) => {
       const fbRes = await handleFeedbackPost(body || {}, ip);
       res.writeHead(fbRes.status, fbRes.headers);
       res.end(fbRes.body);
+      return;
+    }
+    if (req.method === "GET" && req.url === "/api/bling/catalog") {
+      // Public catalog — no keys needed.
+      const catRes = handleBlingCatalog();
+      res.writeHead(catRes.status, catRes.headers);
+      res.end(catRes.body);
+      return;
+    }
+    if (req.method === "POST" && req.url === "/api/bling/checkout") {
+      // Create a Stripe Checkout Session for a catalog item.
+      // 503 with payments_not_configured until STRIPE_SECRET_KEY is set.
+      const body = await readBody(req).catch(() => ({}));
+      const coRes = await handleBlingCheckout(body || {});
+      res.writeHead(coRes.status, coRes.headers);
+      res.end(coRes.body);
+      return;
+    }
+    if (req.method === "POST" && req.url === "/api/bling/webhook") {
+      // Stripe webhook — needs the RAW body for signature verification.
+      const raw = await readRawBody(req).catch(() => null);
+      const sig = req.headers["stripe-signature"];
+      const whRes = await handleBlingWebhook(raw, Array.isArray(sig) ? sig[0] : sig);
+      res.writeHead(whRes.status, whRes.headers);
+      res.end(whRes.body);
       return;
     }
     if (req.method === "GET" && req.url.startsWith("/api/")) {
