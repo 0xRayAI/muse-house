@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎺 House Anthem — a Bling delight</title>
+<meta name="robots" content="noindex">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; }
+  body { background: #141210; color: #fff; font-family: -apple-system, "Segoe UI", sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 2rem; }
+  .disc { width: 120px; height: 120px; border-radius: 50%; background: conic-gradient(#e86aa0, #ffd166, #7bdff2, #b388eb, #e86aa0); animation: spin 6s linear infinite; display: flex; align-items: center; justify-content: center; font-size: 3rem; margin-bottom: 2rem; box-shadow: 0 0 40px rgba(232,106,160,.5); }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  h1 { font-size: clamp(1.8rem, 5vw, 3rem); margin-bottom: .5rem; }
+  p { color: #d8cfc0; margin-bottom: 2rem; }
+  audio { width: min(90vw, 420px); }
+  .house { color: #e86aa0; font-weight: 700; }
+</style>
+</head>
+<body>
+<div class="disc">🎺</div>
+<h1>Your House Anthem</h1>
+<p id="sub">Thirty seconds of pure house pride. Turn it up.</p>
+<audio controls src="house-anthem.mp3"></audio>
+<script>
+  const house = new URLSearchParams(location.search).get("house");
+  if (house) document.getElementById("sub").innerHTML =
+    "Thirty seconds of pure house pride — composed for <span class=\"house\"></span>. Turn it up.";
+  if (house) document.querySelector(".house").textContent = house;
+</script>
+</body>
+</html>

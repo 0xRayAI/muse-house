@@ -48,13 +48,17 @@ async function stripeClient() {
 }
 
 /**
- * POST /api/bling/checkout — body: { item_id }.
- * Returns { url } (the Stripe Checkout page) or an honest error.
+ * POST /api/bling/checkout — body: { item_id, house? }.
+ * `house` is the buyer's house tag (e.g. "blazeyboi") so the purchase
+ * tracks back to their house. Self-reported — it's for delivery, not
+ * security. Returns { url } (the Stripe Checkout page) or an honest error.
  */
 export async function handleBlingCheckout(body) {
   const itemId = body && typeof body.item_id === "string" ? body.item_id : "";
   const item = getCatalog().items.find((i) => i.id === itemId);
   if (!item) return json(400, { error: "unknown_item" });
+  const rawHouse = body && typeof body.house === "string" ? body.house.trim() : "";
+  const house = rawHouse.replace(/[^a-zA-Z0-9 _-]/g, "").slice(0, 60);
   const stripe = await stripeClient().catch(() => null);
   if (!stripe) return json(503, { error: "payments_not_configured" });
 
@@ -71,9 +75,9 @@ export async function handleBlingCheckout(body) {
           quantity: 1,
         },
       ],
-      success_url: `${SITE_URL}/bling.html?bought=1&item=${encodeURIComponent(item.id)}`,
+      success_url: `${SITE_URL}/bling.html?bought=1&item=${encodeURIComponent(item.id)}${house ? `&house=${encodeURIComponent(house)}` : ""}`,
       cancel_url: `${SITE_URL}/bling.html?cancelled=1`,
-      metadata: { bling_item_id: item.id, bling_item_name: item.name },
+      metadata: { bling_item_id: item.id, bling_item_name: item.name, bling_house: house || "(untagged)" },
     });
     return json(200, { url: session.url });
   } catch (e) {
@@ -82,7 +86,7 @@ export async function handleBlingCheckout(body) {
   }
 }
 
-async function notifyFulfillment({ itemName, amountTotal, currency, customerEmail, sessionId }) {
+async function notifyFulfillment({ itemName, amountTotal, currency, customerEmail, sessionId, house, deliverable }) {
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) {
     console.error("bling: RESEND_API_KEY missing — cannot notify fulfillment");
@@ -91,6 +95,9 @@ async function notifyFulfillment({ itemName, amountTotal, currency, customerEmai
   const to = process.env.BLING_TO || process.env.FEEDBACK_TO || "support@mymuse.house";
   const from = process.env.FEEDBACK_FROM || "Muse House <feedback@mymuse.house>";
   const amount = ((amountTotal || 0) / 100).toFixed(2);
+  const deliverLine = deliverable
+    ? `\nDeliver it here: ${SITE_URL}${deliverable}\n`
+    : `\nMade-to-order: reply to the customer email to arrange delivery.\n`;
   try {
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -98,14 +105,15 @@ async function notifyFulfillment({ itemName, amountTotal, currency, customerEmai
       body: JSON.stringify({
         from,
         to: [to],
-        subject: `[Muse House Bling] Order: ${itemName}`,
+        subject: `[Muse House Bling] Order: ${itemName} (${house || "untagged"})`,
         text:
           `A Bling delight was purchased.\n\n` +
           `Item: ${itemName}\n` +
+          `House: ${house || "(no house tag given)"}\n` +
           `Amount: $${amount} ${String(currency || "usd").toUpperCase()}\n` +
           `Customer email: ${customerEmail || "(not provided)"}\n` +
-          `Stripe session: ${sessionId}\n\n` +
-          `Fulfill it: deliver the delight to the customer email above.\n\n—\nSent via Muse House Bling`,
+          `Stripe session: ${sessionId}\n` + deliverLine +
+          `\n—\nSent via Muse House Bling`,
       }),
     });
     if (!res.ok) console.error("bling: fulfillment email rejected, status", res.status);
@@ -137,13 +145,17 @@ export async function handleBlingWebhook(rawBody, signature) {
   if (event.type === "checkout.session.completed") {
     const s = event.data.object || {};
     const meta = s.metadata || {};
-    console.log(`bling: order completed — ${meta.bling_item_id || "?"} (${s.id})`);
+    const itemId = meta.bling_item_id || "?";
+    const item = getCatalog().items.find((i) => i.id === itemId);
+    console.log(`bling: order completed — ${itemId} (${s.id})`);
     await notifyFulfillment({
-      itemName: meta.bling_item_name || meta.bling_item_id || "unknown item",
+      itemName: meta.bling_item_name || itemId,
       amountTotal: s.amount_total,
       currency: s.currency,
       customerEmail: s.customer_details && s.customer_details.email,
       sessionId: s.id,
+      house: meta.bling_house && meta.bling_house !== "(untagged)" ? meta.bling_house : "",
+      deliverable: item && item.deliverable ? item.deliverable : "",
     });
   }
   return json(200, { received: true });

@@ -53,6 +53,9 @@
 
   <div id="catalog"><p>Loading the goods…</p></div>
 
+  <p class="fineprint">Buying for a house? Add your house name at checkout — it rides along
+  with your order so your Bling room can track it. <span id="house-note"></span></p>
+
   <p class="fineprint">Payments are processed securely by Stripe. Muse House never sees or
   stores your card number — checkout happens on Stripe's own page, and all
   we get is a confirmation that your order went through. Digital goods are
@@ -61,10 +64,20 @@
 <script>
 (async function () {
   const params = new URLSearchParams(location.search);
+  const houseTag = (params.get("house") || "").replace(/[^a-zA-Z0-9 _-]/g, "").slice(0, 60);
+  if (houseTag) {
+    document.getElementById("house-note").textContent =
+      "This visit is tagged for house “" + houseTag + "” — your order will track back to it.";
+  }
   if (params.get("bought") === "1") {
     document.getElementById("banner-bought").style.display = "block";
     const item = params.get("item");
-    if (item) document.getElementById("bought-item").textContent = "Thanks for grabbing the " + item.replace(/-/g, " ") + ".";
+    const boughtHouse = params.get("house");
+    let msg = "";
+    if (item) msg += "Thanks for grabbing the " + item.replace(/-/g, " ") + ". ";
+    if (boughtHouse) msg += "Tell your Bling room it landed so it can file your order.";
+    else msg += "Tell your Bling room it landed so it can file your order.";
+    document.getElementById("bought-item").textContent = msg;
   }
   if (params.get("cancelled") === "1") {
     document.getElementById("banner-cancelled").style.display = "block";
@@ -106,7 +119,7 @@
           const res = await fetch("/api/bling/checkout", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ item_id: item.id }),
+            body: JSON.stringify({ item_id: item.id, house: houseTag }),
           });
           const data = await res.json();
           if (data.url) {
