@@ -67,7 +67,8 @@ Use this when applying at https://muse.ai/platform (work-email login required).
 ## Business / contact
 
 - **Developer:** 0xRayAI
-- **Support:** GitHub issues at https://github.com/0xRayAI/muse-house/issues
+- **Support:** GitHub issues at https://github.com/0xRayAI/muse-house/issues,
+  help form at https://mymuse.house/help.html, or email support@mymuse.house
 - **Monetization:** none at launch (free public blueprint tier).
 
 ## Reviewer walkthrough (end-to-end test)

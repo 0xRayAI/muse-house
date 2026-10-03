@@ -14,8 +14,8 @@ routines.
 - Privacy: https://mymuse.house/privacy.html
 - Terms: https://mymuse.house/terms.html
 - Source: https://github.com/0xRayAI/muse-house
-- Help & feedback: https://mymuse.house/help.html (form opens the user's
-  email app addressed to support; nothing is stored server-side)
+- Help & feedback: https://mymuse.house/help.html (form POSTs to /api/feedback,
+  forwarded via Resend to support@mymuse.house; nothing stored server-side)
 
 ## Auth
 

@@ -17,6 +17,7 @@ import { fileURLToPath } from "node:url";
 import { TOOL_DEFS } from "./tools.mjs";
 import { handleApi } from "./api.mjs";
 import { handleApiTemplate } from "./api.mjs";
+import { handleFeedbackPost } from "./feedback.mjs";
 
 const SERVICE = "muse-house";
 const VERSION = "0.1.0";
@@ -145,6 +146,17 @@ const http = createServer(async (req, res) => {
         res.end(apiRes.body);
         return;
       }
+    }
+    if (req.method === "POST" && req.url === "/api/feedback") {
+      // Help-form submissions → forwarded to the support inbox via Resend.
+      // Fire-and-forward: nothing stored, message content never logged.
+      const body = await readBody(req).catch(() => ({}));
+      const fwd = req.headers["x-forwarded-for"];
+      const ip = (typeof fwd === "string" && fwd.split(",")[0].trim()) || req.socket.remoteAddress || "unknown";
+      const fbRes = await handleFeedbackPost(body || {}, ip);
+      res.writeHead(fbRes.status, fbRes.headers);
+      res.end(fbRes.body);
+      return;
     }
     if (req.method === "GET" && req.url.startsWith("/api/")) {
       const apiRes = handleApi(req.url, new URL(req.url, "http://localhost").searchParams);
