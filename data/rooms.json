@@ -26,7 +26,7 @@
       "description": "Keep the human's dev life sharp: projects tracked, issues triaged, deploys",
       "sections": {
         "purpose": "Keep the human's dev life sharp: projects tracked, issues triaged, deploys\nwatched, learning queued. Ship more, context-switch less.",
-        "connectors_needed": "- **GitHub** — repos, issues, PRs, actions\n- **Web research** — docs, changelogs, CVEs, new tools\n- **Artifact** — architecture notes, runbooks\n- **Gmail** — deploy notifications, security alerts",
+        "connectors_needed": "- **GitHub** — repos, issues, PRs, actions\n- **Discord** — team coordination, deploy notifications, dev discussions\n- **Web research** — docs, changelogs, CVEs, new tools\n- **Artifact** — architecture notes, runbooks\n- **Gmail** — deploy notifications, security alerts",
         "onboarding_fills": "- Active repos and what each one is\n- Current stack(s) and deployment targets\n- Issue triage preferences (labels, priorities)\n- Learning queue — what you're leveling up in",
         "mill_jobs": "| Job | Type | What |\n|-----|------|------|\n| Repo health | cron, daily | Open PRs needing review, failing CI, stale branches |\n| Issue triage | cron, weekly | New issues sorted by priority; drafts, not labels |\n| Deploy watch | hook (event) | Wake on deploy notification; confirm or flag |\n| Changelog radar | cron, weekly | Notable updates in your stack |",
         "board_cards_it_files": "- **PROJECT** — repo / stack / status / next milestone\n- **ISSUE** — repo / title / priority / suggested action (draft only)\n- **DEPLOY** — service / version / time / status",
