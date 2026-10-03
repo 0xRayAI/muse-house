@@ -20,6 +20,7 @@
 import { readFileSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { timingSafeEqual } from "node:crypto";
 
 const SITE_DIR = join(dirname(fileURLToPath(import.meta.url)), "..", "site");
 const SITE_URL = (process.env.SITE_URL || "https://mymuse.house").replace(/\/$/, "");
@@ -119,6 +120,51 @@ async function notifyFulfillment({ itemName, amountTotal, currency, customerEmai
     if (!res.ok) console.error("bling: fulfillment email rejected, status", res.status);
   } catch (e) {
     console.error("bling: fulfillment email failed:", String((e && e.message) || e));
+  }
+}
+
+/**
+ * GET /api/bling/orders?token=… — the order feed rooms poll.
+ *
+ * Token-protected (BLING_API_TOKEN env): returns recent completed
+ * checkouts so a Bling room knows what its human bought without asking.
+ * Stateless proxy over Stripe — nothing stored. Only order metadata
+ * (item, amount, house tag); card data never exists here.
+ */
+function tokensEqual(a, b) {
+  const ab = Buffer.from(String(a || ""));
+  const bb = Buffer.from(String(b || ""));
+  return ab.length === bb.length && timingSafeEqual(ab, bb);
+}
+
+export async function handleBlingOrders(searchParams) {
+  const expected = process.env.BLING_API_TOKEN;
+  if (!expected) return json(503, { error: "orders_not_configured" });
+  const given = searchParams ? searchParams.get("token") : "";
+  if (!tokensEqual(given, expected)) return json(401, { error: "unauthorized" });
+  const stripe = await stripeClient().catch(() => null);
+  if (!stripe) return json(503, { error: "payments_not_configured" });
+  try {
+    const sessions = await stripe.checkout.sessions.list({ limit: 25 });
+    const orders = sessions.data
+      .filter((s) => s.payment_status === "paid" || s.status === "complete")
+      .map((s) => ({
+        session_id: s.id,
+        item_id: (s.metadata || {}).bling_item_id || null,
+        item_name: (s.metadata || {}).bling_item_name || null,
+        house: (s.metadata || {}).bling_house && (s.metadata || {}).bling_house !== "(untagged)"
+          ? s.metadata.bling_house
+          : null,
+        amount_cents: s.amount_total,
+        currency: s.currency,
+        email: (s.customer_details || {}).email || null,
+        created: s.created,
+      }))
+      .sort((a, b) => b.created - a.created);
+    return json(200, { orders });
+  } catch (e) {
+    console.error("bling: orders list failed:", String((e && e.message) || e));
+    return json(502, { error: "orders_failed" });
   }
 }
 

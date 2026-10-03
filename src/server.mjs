@@ -18,7 +18,7 @@ import { TOOL_DEFS } from "./tools.mjs";
 import { handleApi } from "./api.mjs";
 import { handleApiTemplate } from "./api.mjs";
 import { handleFeedbackPost } from "./feedback.mjs";
-import { handleBlingCatalog, handleBlingCheckout, handleBlingWebhook } from "./bling.mjs";
+import { handleBlingCatalog, handleBlingCheckout, handleBlingWebhook, handleBlingOrders } from "./bling.mjs";
 
 const SERVICE = "muse-house";
 const VERSION = "0.1.0";
@@ -191,6 +191,15 @@ const http = createServer(async (req, res) => {
       const whRes = await handleBlingWebhook(raw, Array.isArray(sig) ? sig[0] : sig);
       res.writeHead(whRes.status, whRes.headers);
       res.end(whRes.body);
+      return;
+    }
+    if (req.method === "GET" && req.url.startsWith("/api/bling/orders")) {
+      // Token-protected order feed for Bling rooms. The token lives in
+      // Railway env (BLING_API_TOKEN) and in the room's memory — never in chat.
+      const sp = new URL(req.url, "http://localhost").searchParams;
+      const oRes = await handleBlingOrders(sp);
+      res.writeHead(oRes.status, oRes.headers);
+      res.end(oRes.body);
       return;
     }
     if (req.method === "GET" && req.url.startsWith("/api/")) {
