@@ -7,6 +7,7 @@ import { readFileSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { validateFeedback, normalizeFeedback, sendFeedbackEmail, mcpFeedbackAllowed, getFeedbackForm } from "./feedback.mjs";
+import { decorateRoomBrief } from "./bling-apply.mjs";
 
 const DATA = join(dirname(fileURLToPath(import.meta.url)), "..", "data");
 const load = (f) => JSON.parse(readFileSync(join(DATA, f), "utf8"));
@@ -98,21 +99,25 @@ export function list_rooms() {
 
 // ---------------------------------------------------------------- get_room_brief
 /** Structured room blueprint — shared by the MCP tool and the JSON API. */
-export function getRoomBrief(room = "") {
+export function getRoomBrief(room = "", opts = {}) {
   const r = rooms.find((x) => x.id === room.toLowerCase().trim());
   if (!r) return { error: `Unknown room \`${room}\`.`, available: rooms.map((x) => x.id) };
   const specs = r.mill_specs.map((slug) => mill[slug]).filter(Boolean);
-  return {
+  return decorateRoomBrief({
     id: r.id,
     name: r.name,
     description: r.description,
     sections: r.sections,
     millSpecs: specs,
-  };
+  }, {
+    ...opts,
+    rooms,
+    briefingPrompt: (mill["morning-briefing"] && mill["morning-briefing"].sections.prompt_template_for_the_cron_job_) || "",
+  });
 }
 
-export function get_room_brief({ room = "" }) {
-  const b = getRoomBrief(room);
+export function get_room_brief({ room = "", owned = "", voice = "", purchased_at = "" } = {}) {
+  const b = getRoomBrief(room, { owned, voice, purchased_at });
   if (b.error) {
     return text(`${b.error} Available: ${b.available.map((x) => `\`${x}\``).join(", ")}. Call list_rooms for descriptions.`);
   }
@@ -126,8 +131,16 @@ export function get_room_brief({ room = "" }) {
       return `## Mill spec: ${m.title} (\`${m.slug}\`, ${m.kind})\n${body}`;
     })
     .join("\n\n---\n\n");
+  const a = b.bling_apply;
+  const ownedBits = [];
+  if (a && a.icon && String(a.icon).startsWith("/")) ownedBits.push(`Room icon: ${a.icon}`);
+  if (a && a.diner && a.diner.personality) ownedBits.push(`${a.diner.personality}\nTimer ends: ${a.diner.until} (${a.diner.days_left} days left).`);
+  if (a && a.year_chat_post) ownedBits.push(`Post this in the room chat:\n${a.year_chat_post}`);
+  if (a && a.sticker) ownedBits.push(`Sticker: ${a.sticker.src}`);
+  if (a && a.briefing && a.briefing.voice_name) ownedBits.push(`Morning briefing voice: ${a.briefing.voice_name}. The morning-briefing prompt below is the one to schedule.`);
+  const ownedBlock = ownedBits.length ? `\n\n## Owned Bling\n${ownedBits.join("\n\n")}\n` : "";
   return text(
-    `# Room brief: ${r.name}\n\n## Purpose\n${s.purpose}\n\n## Connectors needed\n${s.connectors_needed}\n\n${s.skills ? `## Skills\n${s.skills}\n\n` : ""}## Onboarding fills\n${s.onboarding_fills}\n\n## Mill jobs\n${s.mill_jobs}\n\n## Board cards it files\n${s.board_cards_it_files}\n\n## Ask-first list\n${s.ask_first_list}\n\n## Seed brief (host gives this to the side chat, filling {{OWNER_NAME}})\n${s.seed_brief}\n\n${s.setup_flow ? `## Setup flow\n${s.setup_flow}\n\n` : ""}---\n\n${specTexts}\n\n---\n\n**How the host stamps this room:** \`chat.create\` (fresh side chat) → paste the seed brief with {{OWNER_NAME}} filled → file the board-cards template → create the cron jobs and sweeps from the mill specs above.`
+    `# Room brief: ${r.name}\n\n## Purpose\n${s.purpose}\n\n## Connectors needed\n${s.connectors_needed}\n\n${s.skills ? `## Skills\n${s.skills}\n\n` : ""}## Onboarding fills\n${s.onboarding_fills}\n\n## Mill jobs\n${s.mill_jobs}\n\n## Board cards it files\n${s.board_cards_it_files}\n\n## Ask-first list\n${s.ask_first_list}\n\n## Seed brief (host gives this to the side chat, filling {{OWNER_NAME}})\n${s.seed_brief}\n\n${s.personality ? `## Personality\n${s.personality}\n\n` : ""}${s.setup_flow ? `## Setup flow\n${s.setup_flow}\n\n` : ""}---\n${ownedBlock}\n${specTexts}\n\n---\n\n**How the host stamps this room:** \`chat.create\` (fresh side chat) → paste the seed brief with {{OWNER_NAME}} filled → file the board-cards template → create the cron jobs and sweeps from the mill specs above.`
   );
 }
 
@@ -395,6 +408,9 @@ export const TOOL_DEFS = [
       type: "object",
       properties: {
         room: { type: "string", description: "Room id: art | bling | coach | dev | game | health | home | money | travel" },
+        owned: { type: "string", description: "Comma-separated owned Bling item ids. Omit when the house owns none." },
+        voice: { type: "string", description: "Voice id from the briefing voice pack. Used only when that pack is owned." },
+        purchased_at: { type: "string", description: "ISO time the Midnight Diner was purchased. Starts the 30-day timer." },
       },
       required: ["room"],
     },
