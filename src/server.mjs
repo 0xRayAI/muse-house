@@ -18,7 +18,7 @@ import { TOOL_DEFS } from "./tools.mjs";
 import { handleApi } from "./api.mjs";
 import { handleApiTemplate } from "./api.mjs";
 import { handleFeedbackPost } from "./feedback.mjs";
-import { handleBlingCatalog, handleBlingCheckout, handleBlingWebhook, handleBlingOrders } from "./bling.mjs";
+import { handleBlingCatalog, handleBlingCheckout, handleBlingWebhook, handleBlingOrders, handleBlingDevGrant } from "./bling.mjs";
 
 const SERVICE = "muse-house";
 const VERSION = "0.1.0";
@@ -191,6 +191,15 @@ const http = createServer(async (req, res) => {
       const whRes = await handleBlingWebhook(raw, Array.isArray(sig) ? sig[0] : sig);
       res.writeHead(whRes.status, whRes.headers);
       res.end(whRes.body);
+      return;
+    }
+    if (req.method === "POST" && req.url === "/api/bling/dev/grant") {
+      // Dev backdoor — grants an item without payment. Token-gated by
+      // BLING_DEV_TOKEN env. For testing fulfillment end-to-end.
+      const body = await readBody(req).catch(() => ({}));
+      const gRes = await handleBlingDevGrant(body || {});
+      res.writeHead(gRes.status, gRes.headers);
+      res.end(gRes.body);
       return;
     }
     if (req.method === "GET" && req.url.startsWith("/api/bling/orders")) {

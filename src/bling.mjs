@@ -170,6 +170,47 @@ export async function handleBlingOrders(searchParams) {
 }
 
 /**
+ * POST /api/bling/dev/grant — dev backdoor. Grants an item without payment.
+ *
+ * Body: { dev_token, item_id, house?, email? }
+ * Validates dev_token against BLING_DEV_TOKEN env (timing-safe), then runs
+ * the same fulfillment path as a Stripe webhook (notifyFulfillment) with a
+ * dev session id. Returns the deliverable URL directly for verification.
+ * NOT for production use — gate with a strong token and rotate it.
+ */
+export async function handleBlingDevGrant(body) {
+  const expected = process.env.BLING_DEV_TOKEN;
+  if (!expected) return json(503, { error: "dev_grant_not_configured" });
+  const given = body && body.dev_token;
+  if (!tokensEqual(given, expected)) return json(401, { error: "unauthorized" });
+  const itemId = body && body.item_id;
+  if (!itemId) return json(400, { error: "missing_item_id" });
+  const catalog = getCatalog();
+  const item = (catalog.items || []).find((i) => i.id === itemId);
+  if (!item) return json(404, { error: "unknown_item" });
+  const house = (body && body.house) || "dev";
+  const email = (body && body.email) || "dev@mymuse.house";
+  const sessionId = `dev_${Date.now()}`;
+  await notifyFulfillment({
+    itemName: item.name,
+    amountTotal: 0,
+    currency: "usd",
+    customerEmail: email,
+    sessionId,
+    house,
+    deliverable: item.deliverable || "",
+  });
+  return json(200, {
+    granted: true,
+    item_id: item.id,
+    item_name: item.name,
+    house,
+    deliverable: item.deliverable ? `${SITE_URL}${item.deliverable}` : null,
+    session_id: sessionId,
+  });
+}
+
+/**
  * POST /api/bling/webhook — raw body + Stripe-Signature header required.
  * Verifies the signature; on checkout.session.completed, pings the
  * fulfillment inbox. Always 200 to Stripe on verified events (even if the
