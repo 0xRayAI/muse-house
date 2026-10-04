@@ -33,15 +33,14 @@
       "image": "https://mymuse.house/bling/delights/stickers/diner.gif"
     },
     {
-      "deliverable": null,
-      "description": "A one-time, beautifully put-together report built from your house board. Coming soon.",
+      "deliverable": "/bling/delights/year-in-review/",
+      "description": "A static sample year-in-review page (example numbers only \u2014 not built from your house board).",
       "id": "year-in-review",
       "kind": "gizmo",
       "name": "Year-in-review deep dive",
       "price_cents": 900,
       "chat_asset": "sandbox://workspace/muse-house/bling/delights/stickers/trophy.gif",
-      "image": "https://mymuse.house/bling/delights/stickers/trophy.gif",
-      "coming_soon": true
+      "image": "https://mymuse.house/bling/delights/stickers/trophy.gif"
     },
     {
       "deliverable": null,
