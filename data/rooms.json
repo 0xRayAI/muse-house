@@ -3,7 +3,7 @@
   "rooms": [
     {
       "id": "art",
-      "name": "🎨 Art",
+      "name": "🎆 Art",
       "description": "Make art with the human: generate images from ideas, iterate and refine",
       "version": "1",
       "sections": {
@@ -26,7 +26,7 @@
     },
     {
       "id": "bling",
-      "name": "💎 Bling",
+      "name": "✨ Bling",
       "description": "Run the house shop: present the catalog of trinkets (cosmetics for your",
       "version": "7",
       "sections": {
@@ -49,7 +49,7 @@
     },
     {
       "id": "coach",
-      "name": "🎯 Coach",
+      "name": "🔥 Coach",
       "description": "Keep the human accountable to their own goals: intentions set each",
       "version": "1",
       "sections": {
@@ -72,7 +72,7 @@
     },
     {
       "id": "dev",
-      "name": "💻 Dev",
+      "name": "⚡ Dev",
       "description": "Keep the human's dev life sharp: projects tracked, issues triaged, deploys",
       "version": "1",
       "sections": {
@@ -96,7 +96,7 @@
     },
     {
       "id": "game",
-      "name": "🎮 Game",
+      "name": "👾 Game",
       "description": "Keep the human's game life organized: backlog prioritized, deals caught",
       "version": "1",
       "sections": {
@@ -119,7 +119,7 @@
     },
     {
       "id": "health",
-      "name": "❤️ Health",
+      "name": "💖 Health",
       "description": "Keep the human's health logistics handled: appointments booked and kept,",
       "version": "1",
       "sections": {
@@ -143,7 +143,7 @@
     },
     {
       "id": "home",
-      "name": "🏠 Home",
+      "name": "🌃 Home",
       "description": "Run the household: maintenance before things break, repairs tracked to",
       "version": "1",
       "sections": {
@@ -166,7 +166,7 @@
     },
     {
       "id": "money",
-      "name": "👛 Money — the proof room",
+      "name": "💸 Money — the proof room",
       "description": "Keep the human's money picture current: what's in, what's due, what each",
       "version": "1",
       "sections": {
@@ -192,7 +192,7 @@
     },
     {
       "id": "travel",
-      "name": "✈️ Travel",
+      "name": "🌠 Travel",
       "description": "Plan and run the human's trips end to end: options compared honestly on",
       "version": "1",
       "sections": {
