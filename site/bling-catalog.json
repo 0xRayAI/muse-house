@@ -56,15 +56,14 @@
       "coming_soon": true
     },
     {
-      "deliverable": null,
-      "description": "A surprise delight for your house \u2014 stickers, upgrades, or something we just made. Coming soon.",
+      "deliverable": "/bling/delights/mystery-drop/",
+      "description": "A surprise delight for your house \u2014 one random sticker reveal per visit (button locks after open).",
       "id": "mystery-drop",
       "kind": "delight",
       "name": "Mystery drop",
       "price_cents": 400,
       "chat_asset": "sandbox://workspace/muse-house/site/bling/delights/stickers/gift.gif",
-      "image": "https://mymuse.house/bling/delights/stickers/gift.gif",
-      "coming_soon": true
+      "image": "https://mymuse.house/bling/delights/stickers/gift.gif"
     },
     {
       "deliverable": null,
