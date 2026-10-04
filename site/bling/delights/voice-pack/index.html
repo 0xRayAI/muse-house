@@ -13,15 +13,10 @@
   h1 .v { color: #7dd3fc; }
   p.sub { color: #8a8fa3; text-align: center; margin: 12px auto 34px; max-width: 480px; line-height: 1.55; }
   .voice { background: #18181f; border: 1px solid #26262f; border-radius: 16px;
-           padding: 22px; margin-bottom: 16px; cursor: pointer; transition: border-color .15s; }
-  .voice:hover { border-color: #7dd3fc66; }
-  .voice.open { border-color: #7dd3fc; }
-  .voice .row { display: flex; justify-content: space-between; align-items: baseline; }
+           padding: 22px; margin-bottom: 16px; }
   .voice .name { font-size: 1.15rem; font-weight: 700; }
-  .voice .tag { color: #8a8fa3; font-style: italic; font-size: .9rem; }
-  .voice .sample { display: none; margin-top: 14px; padding-top: 14px;
-                   border-top: 1px solid #26262f; line-height: 1.65; color: #d4d4d8; white-space: pre-line; }
-  .voice.open .sample { display: block; }
+  .voice .tag { color: #8a8fa3; font-style: italic; font-size: .9rem; margin: 4px 0 12px; }
+  .voice audio { width: 100%; margin-top: 8px; }
   .how { color: #8a8fa3; font-size: .9rem; line-height: 1.65; margin-top: 30px;
          background: #18181f; border-radius: 14px; padding: 20px 22px; }
   .how strong { color: #f5f7fa; }
@@ -32,28 +27,25 @@
 <body>
 <div class="wrap">
   <h1>Briefing <span class="v">Voice Pack</span></h1>
-  <p class="sub">Six voice styles as text samples — from drill sergeant to bedtime story. Tap one to read it. <span id="houseLine"></span></p>
+  <p class="sub">Six voices for your morning briefing. Hit play to hear each one, then tell your Bling room which to use.</p>
   <div id="voices"></div>
   <div class="how">
-    <strong>What’s in this pack:</strong> six text samples you can tap and read.
-    No audio files. No live briefing hookup in this pack — style samples only.
+    <strong>How to pick:</strong> Listen above, then go to your Bling room and say
+    "I want the <em>Bright</em> voice" (or whichever you like).
+    Your 7am briefing switches immediately and stays until you change it.
   </div>
-  <footer><a href="/bling.html">← back to the Bling shop</a></footer>
+  <footer><a href="/bling.html">← Back to the shop</a></footer>
 </div>
 <script>
-  const house = new URLSearchParams(location.search).get("house");
-  if (house) document.getElementById("houseLine").textContent = "Previewing for " + house + ".";
-  fetch("./voices.json").then(r => r.json()).then(pack => {
-    const el = document.getElementById("voices");
-    pack.voices.forEach(v => {
-      const d = document.createElement("div");
-      d.className = "voice";
-      d.innerHTML = `<div class="row"><div class="name">${v.name}</div></div>
-        <div class="tag">${v.tagline}</div><div class="sample">${v.sample}</div>`;
-      d.addEventListener("click", () => d.classList.toggle("open"));
-      el.appendChild(d);
-    });
+fetch('voices.json').then(r => r.json()).then(d => {
+  const el = document.getElementById('voices');
+  d.voices.forEach(v => {
+    const div = document.createElement('div');
+    div.className = 'voice';
+    div.innerHTML = `<div class="name">${v.name}</div><div class="tag">${v.tagline}</div><audio controls preload="none" src="${v.audio}"></audio>`;
+    el.appendChild(div);
   });
+});
 </script>
 </body>
 </html>
