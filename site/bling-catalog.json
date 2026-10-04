@@ -19,7 +19,8 @@
       "name": "Neon Nights",
       "price_cents": 300,
       "chat_asset": "sandbox://workspace/muse-house/site/bling/delights/stickers/gem.gif",
-      "image": "https://mymuse.house/bling/delights/stickers/gem.gif"
+      "image": "https://mymuse.house/bling/delights/stickers/gem.gif",
+      "coming_soon": true
     },
     {
       "deliverable": "/bling/delights/midnight-diner/",
@@ -29,7 +30,8 @@
       "name": "Midnight Diner",
       "price_cents": 500,
       "chat_asset": "sandbox://workspace/muse-house/bling/delights/stickers/diner.gif",
-      "image": "https://mymuse.house/bling/delights/stickers/diner.gif"
+      "image": "https://mymuse.house/bling/delights/stickers/diner.gif",
+      "coming_soon": true
     },
     {
       "deliverable": "/bling/delights/year-in-review/",
@@ -69,7 +71,8 @@
       "name": "Seasonal Pack",
       "price_cents": 600,
       "chat_asset": "sandbox://workspace/muse-house/bling/delights/stickers/seasonal.gif",
-      "image": "https://mymuse.house/bling/delights/stickers/seasonal.gif"
+      "image": "https://mymuse.house/bling/delights/stickers/seasonal.gif",
+      "coming_soon": true
     },
     {
       "id": "house-anthem",
