@@ -42,15 +42,14 @@
       "image": "https://mymuse.house/bling/delights/stickers/trophy.gif"
     },
     {
-      "deliverable": null,
-      "description": "Give your morning briefing a personality \u2014 six voices, from drill sergeant to bedtime story. Coming soon.",
+      "deliverable": "/bling/delights/voice-pack/",
+      "description": "Six briefing voice text samples for your house \u2014 read-only samples (no audio playback in this pack yet).",
       "id": "briefing-voice-pack",
       "kind": "gizmo",
       "name": "Briefing voice pack",
       "price_cents": 700,
       "chat_asset": "sandbox://workspace/muse-house/bling/delights/stickers/mic.gif",
-      "image": "https://mymuse.house/bling/delights/stickers/mic.gif",
-      "coming_soon": true
+      "image": "https://mymuse.house/bling/delights/stickers/mic.gif"
     },
     {
       "deliverable": "/bling/delights/mystery-drop/",
