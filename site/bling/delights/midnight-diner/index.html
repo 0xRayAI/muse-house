@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Midnight Diner — House Theme Preview</title>
+<link rel="stylesheet" href="./diner-theme.css">
+<style>
+  * { box-sizing: border-box; margin: 0; }
+  body { min-height: 100vh; padding: 0 0 60px; }
+  header { text-align: center; padding: 46px 20px 10px; }
+  header h1 { font-size: 2.6rem; }
+  header p { color: var(--diner-muted); margin-top: 10px; }
+  .wrap { max-width: 680px; margin: 30px auto 0; padding: 0 20px; }
+  .chrome-bar { margin: 0 0 22px; }
+  .booth { padding: 0 0 8px; margin-bottom: 26px; overflow: hidden; }
+  .booth h2 { font-family: var(--diner-font-display); font-size: 1.35rem;
+              padding: 18px 22px 4px; }
+  .menu-item { display: flex; justify-content: space-between; align-items: baseline;
+               padding: 12px 22px; gap: 12px; }
+  .menu-item .dish { font-weight: 600; }
+  .menu-item .desc { color: var(--diner-muted); font-size: .85rem; margin-top: 3px; }
+  .cta { text-align: center; margin-top: 34px; }
+  .btn-neon { padding: 13px 34px; font-size: 1rem; font-weight: 700; }
+  .how { max-width: 680px; margin: 34px auto 0; padding: 0 20px; color: var(--diner-muted);
+         font-size: .9rem; line-height: 1.65; }
+  .how code { color: var(--diner-neon-cyan); font-size: .85em; }
+  footer { text-align: center; margin-top: 44px; font-size: .8rem; color: var(--diner-muted); }
+  footer a { color: var(--diner-neon-cyan); }
+</style>
+</head>
+<body class="diner">
+  <header>
+    <h1 class="sign">MIDNIGHT <span class="sign cyan">DINER</span></h1>
+    <p>A full visual theme for your house site — chrome, neon, and pie.<br>
+    <span id="houseLine"></span></p>
+  </header>
+  <div class="wrap">
+    <div class="chrome-bar"></div>
+    <div class="booth">
+      <div class="booth-top"></div>
+      <h2 class="sign cyan">Tonight's Specials</h2>
+      <div class="menu-item"><div><div class="dish">Morning Briefing</div><div class="desc">Served hot at 7am, with your cash position on the side</div></div><div class="price">$0</div></div>
+      <div class="menu-item"><div><div class="dish">Bill Watch</div><div class="desc">Three sweeps a day, never a surprise</div></div><div class="price">$0</div></div>
+      <div class="menu-item"><div><div class="dish">Evening Wrap</div><div class="desc">Pie à la mode: everything handled, or honestly flagged</div></div><div class="price">$0</div></div>
+    </div>
+    <div class="booth">
+      <div class="booth-top"></div>
+      <h2 class="sign">The Rooms</h2>
+      <div class="menu-item"><div><div class="dish">✈️ Travel · ❤️ Health · 🏠 Home</div><div class="desc">Booth seating, all nine rooms</div></div><div class="price">9</div></div>
+      <div class="menu-item"><div><div class="dish">💎 Bling</div><div class="desc">The dessert case — you're looking at it</div></div><div class="price">★</div></div>
+    </div>
+    <div class="checker"></div>
+    <div class="cta">
+      <a href="/bling.html"><button class="btn-neon">Take this theme home</button></a>
+    </div>
+    <div class="how">
+      <strong style="color:var(--diner-ink)">How to apply:</strong> after purchase, download
+      <code>diner-theme.css</code>, add <code>class="diner"</code> to your house site's
+      <code>&lt;body&gt;</code>, and use the <code>.sign</code>, <code>.booth</code>,
+      <code>.chrome-bar</code>, <code>.checker</code>, and <code>.btn-neon</code> classes.
+    </div>
+  </div>
+  <footer><a href="/bling.html">← back to the Bling shop</a></footer>
+<script>
+  const house = new URLSearchParams(location.search).get("house");
+  if (house) document.getElementById("houseLine").textContent =
+    "Previewing for " + house + "'s house.";
+</script>
+</body>
+</html>
