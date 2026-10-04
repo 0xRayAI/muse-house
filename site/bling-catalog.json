@@ -23,15 +23,14 @@
       "coming_soon": true
     },
     {
-      "deliverable": null,
-      "description": "A full visual theme for your house site \u2014 chrome, neon, and pie. Coming soon.",
+      "deliverable": "/bling/delights/midnight-diner/",
+      "description": "A full visual theme for your house site \u2014 chrome, neon, and pie.",
       "id": "midnight-diner-theme",
       "kind": "trinket",
       "name": "Midnight Diner house theme",
       "price_cents": 500,
       "chat_asset": "sandbox://workspace/muse-house/bling/delights/stickers/diner.gif",
-      "image": "https://mymuse.house/bling/delights/stickers/diner.gif",
-      "coming_soon": true
+      "image": "https://mymuse.house/bling/delights/stickers/diner.gif"
     },
     {
       "deliverable": null,

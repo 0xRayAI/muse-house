@@ -1,0 +1,75 @@
+/* Midnight Diner — a house theme. chrome, neon, and pie.
+   Drop this file into your house site and link it to apply the theme. */
+:root {
+  --diner-bg: #14101c;
+  --diner-panel: #1d1626;
+  --diner-chrome: linear-gradient(180deg, #e8e8ee 0%, #a9a9b8 30%, #f2f2f6 50%, #8f8fa0 70%, #d5d5de 100%);
+  --diner-neon-pink: #ff2d95;
+  --diner-neon-cyan: #00e5ff;
+  --diner-neon-amber: #ffb300;
+  --diner-cream: #fff8e7;
+  --diner-cherry: #e5383b;
+  --diner-ink: #f4efe4;
+  --diner-muted: #9a8fb0;
+  --diner-font-display: "Georgia", "Times New Roman", serif;
+  --diner-font-body: system-ui, -apple-system, sans-serif;
+}
+body.diner {
+  background: var(--diner-bg);
+  color: var(--diner-ink);
+  font-family: var(--diner-font-body);
+}
+body.diner::before {
+  content: "";
+  position: fixed; inset: 0;
+  background: repeating-conic-gradient(#00000000 0 25%, #ffffff08 0 50%) 0 0 / 48px 48px;
+  pointer-events: none;
+}
+.diner .sign {
+  font-family: var(--diner-font-display);
+  color: var(--diner-neon-pink);
+  text-shadow: 0 0 12px var(--diner-neon-pink), 0 0 40px #ff2d9580;
+  letter-spacing: .04em;
+}
+.diner .sign.cyan {
+  color: var(--diner-neon-cyan);
+  text-shadow: 0 0 12px var(--diner-neon-cyan), 0 0 40px #00e5ff80;
+}
+.diner .chrome-bar {
+  height: 10px; border-radius: 6px;
+  background: var(--diner-chrome);
+  box-shadow: 0 2px 8px #00000088;
+}
+.diner .booth {
+  background: var(--diner-panel);
+  border: 1px solid #3a2c52;
+  border-radius: 18px;
+  box-shadow: inset 0 0 0 1px #ffffff10, 0 8px 28px #00000066;
+}
+.diner .booth .booth-top {
+  height: 6px; border-radius: 18px 18px 0 0;
+  background: linear-gradient(90deg, var(--diner-neon-pink), var(--diner-neon-amber), var(--diner-neon-cyan));
+}
+.diner .menu-item {
+  border-bottom: 1px dotted #4a3a66;
+}
+.diner .price {
+  font-family: var(--diner-font-display);
+  color: var(--diner-neon-amber);
+  text-shadow: 0 0 10px #ffb30090;
+}
+.diner .btn-neon {
+  background: transparent;
+  border: 2px solid var(--diner-neon-cyan);
+  color: var(--diner-neon-cyan);
+  text-shadow: 0 0 8px var(--diner-neon-cyan);
+  box-shadow: 0 0 14px #00e5ff55, inset 0 0 10px #00e5ff33;
+  border-radius: 999px;
+  cursor: pointer;
+}
+.diner .btn-neon:hover { box-shadow: 0 0 24px #00e5ffaa, inset 0 0 14px #00e5ff55; }
+.diner .checker {
+  height: 22px;
+  background: repeating-conic-gradient(#0c0a12 0 25%, #f4efe4 0 50%) 0 0 / 22px 22px;
+  opacity: .9;
+}
