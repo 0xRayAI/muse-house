@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mystery Drop — Bling</title>
+<style>
+  :root { --bg: #0e0c14; --ink: #f5f7fa; --muted: #8a8fa3; --acc: #b388ff; }
+  * { box-sizing: border-box; margin: 0; }
+  body { background: var(--bg); color: var(--ink); font-family: system-ui, sans-serif;
+         min-height: 100vh; display: flex; flex-direction: column; align-items: center;
+         justify-content: center; padding: 40px 20px; text-align: center; }
+  h1 { font-size: 1.8rem; }
+  h1 .m { color: var(--acc); text-shadow: 0 0 18px var(--acc); }
+  p.sub { color: var(--muted); margin: 10px 0 28px; max-width: 440px; line-height: 1.5; }
+  #stage { width: 256px; height: 256px; display: flex; align-items: center; justify-content: center;
+           background: #14121e; border: 1px solid #241f38; border-radius: 24px; margin-bottom: 24px; }
+  #stage img { max-width: 220px; max-height: 220px; border-radius: 12px; }
+  #stage .q { font-size: 5rem; color: var(--acc); text-shadow: 0 0 30px var(--acc); }
+  button { background: var(--acc); color: #0e0c14; border: 0; border-radius: 999px;
+           padding: 14px 34px; font-size: 1rem; font-weight: 700; cursor: pointer; }
+  button:hover { filter: brightness(1.1); }
+  #label { margin-top: 16px; color: var(--muted); min-height: 1.4em; }
+  footer { margin-top: 36px; font-size: .8rem; color: var(--muted); }
+  footer a { color: var(--acc); }
+</style>
+</head>
+<body>
+  <h1>Mystery <span class="m">Drop</span></h1>
+  <p class="sub">A surprise delight for your house. Tap the button — no take-backs.</p>
+  <div id="stage"><div class="q">?</div></div>
+  <button id="open">Open the drop</button>
+  <div id="label"></div>
+  <footer><a href="/bling.html">← back to the Bling shop</a></footer>
+<script>
+  const delights = [
+    { img: "/bling/delights/stickers/sparkle.gif", label: "A pocket star — pocket it for luck." },
+    { img: "/bling/delights/stickers/gem.gif", label: "A neon gem. Shiny things for shiny houses." },
+    { img: "/bling/delights/stickers/party.gif", label: "A party popper. Reason to celebrate: you." },
+    { img: "/bling/delights/stickers/music.gif", label: "A music note. Hum something." },
+  ];
+  const house = new URLSearchParams(location.search).get("house");
+  document.getElementById("open").addEventListener("click", () => {
+    const d = delights[Math.floor(Math.random() * delights.length)];
+    const stage = document.getElementById("stage");
+    stage.innerHTML = `<img src="${d.img}" alt="mystery delight">`;
+    document.getElementById("label").textContent =
+      d.label + (house ? ` — for ${house}'s house.` : "");
+  });
+</script>
+</body>
+</html>
