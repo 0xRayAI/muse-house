@@ -67,15 +67,14 @@
       "coming_soon": true
     },
     {
-      "deliverable": null,
-      "description": "Limited seasonal extras for your house \u2014 icons, themes, and one surprise. Coming soon.",
+      "deliverable": "/bling/delights/seasonal-pack/",
+      "description": "Limited seasonal sticker icons for your house \u2014 autumn set on a sample page (icons only; not a full theme).",
       "id": "seasonal-pack",
       "kind": "delight",
       "name": "Seasonal pack",
       "price_cents": 600,
       "chat_asset": "sandbox://workspace/muse-house/bling/delights/stickers/seasonal.gif",
-      "image": "https://mymuse.house/bling/delights/stickers/seasonal.gif",
-      "coming_soon": true
+      "image": "https://mymuse.house/bling/delights/stickers/seasonal.gif"
     },
     {
       "id": "house-anthem",

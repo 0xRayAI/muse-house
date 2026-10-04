@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Seasonal Pack: Autumn — Bling</title>
+<style>
+  * { box-sizing: border-box; margin: 0; }
+  body { background: #171208; color: #f5efe4; font-family: Georgia, serif;
+         min-height: 100vh; overflow-x: hidden; }
+  #leaves { position: fixed; inset: 0; pointer-events: none; z-index: 1; }
+  .wrap { position: relative; z-index: 2; max-width: 600px; margin: 0 auto;
+          padding: 56px 24px 60px; text-align: center; }
+  h1 { font-size: 2rem; }
+  h1 .a { color: #fb923c; }
+  p.sub { color: #b8a88f; margin: 12px auto 30px; max-width: 440px; line-height: 1.6; font-style: italic; }
+  .icons { display: flex; justify-content: center; gap: 18px; flex-wrap: wrap; margin-bottom: 34px; }
+  .icon-card { background: #241b0e; border: 1px solid #4a3a22; border-radius: 18px;
+               padding: 18px; width: 110px; }
+  .icon-card img { width: 64px; height: 64px; }
+  .icon-card .n { font-size: .8rem; color: #b8a88f; margin-top: 8px; text-transform: capitalize; }
+  .surprise { background: #241b0e; border: 1px dashed #fb923c88; border-radius: 18px;
+              padding: 26px 22px; margin-bottom: 20px; }
+  .surprise h2 { font-size: 1.2rem; color: #fb923c; margin-bottom: 10px; }
+  .surprise p { color: #b8a88f; font-size: .92rem; line-height: 1.6; }
+  .surprise button { margin-top: 14px; background: #fb923c; color: #171208; border: 0;
+                     border-radius: 999px; padding: 12px 30px; font-weight: 700; cursor: pointer;
+                     font-size: .95rem; }
+  footer { margin-top: 36px; font-size: .8rem; color: #b8a88f; }
+  footer a { color: #fb923c; }
+</style>
+</head>
+<body>
+<canvas id="leaves"></canvas>
+<div class="wrap">
+  <h1>Seasonal Pack: <span class="a">Autumn</span></h1>
+  <p class="sub">Limited seasonal extras for your house — icons, seasonal sticker icons, and one surprise. <span id="houseLine"></span></p>
+  <div class="icons">
+    <div class="icon-card"><img src="./ghost.png" alt="ghost"><div class="n">ghost</div></div>
+    <div class="icon-card"><img src="./leaf.png" alt="leaf"><div class="n">leaf</div></div>
+    <div class="icon-card"><img src="./moon.png" alt="moon"><div class="n">moon</div></div>
+    <div class="icon-card"><img src="./candy.png" alt="candy"><div class="n">candy</div></div>
+  </div>
+  <div class="surprise">
+    <h2>🍂 The surprise</h2>
+    <p>A gentle shower of falling leaves for your house site — a few lines of canvas you can drop onto any page, all October long.</p>
+    <button id="burst">Make it rain leaves</button>
+  </div>
+  <footer><a href="/bling.html">← back to the Bling shop</a></footer>
+</div>
+<script>
+  const house = new URLSearchParams(location.search).get("house");
+  if (house) document.getElementById("houseLine").textContent = "Packed for " + house + "'s house.";
+  const cv = document.getElementById("leaves"), cx = cv.getContext("2d");
+  let W, H, flakes = [];
+  function size() { W = cv.width = innerWidth; H = cv.height = innerHeight; }
+  size(); addEventListener("resize", size);
+  const COLORS = ["#fb923c", "#fbbf24", "#e67600", "#c2410c", "#a16207"];
+  function spawn(n) {
+    for (let i = 0; i < n; i++) flakes.push({
+      x: Math.random() * W, y: -20 - Math.random() * 40,
+      s: 4 + Math.random() * 7, vy: .6 + Math.random() * 1.4,
+      ph: Math.random() * 6.28, sw: .5 + Math.random() * 1.5,
+      c: COLORS[Math.floor(Math.random() * COLORS.length)],
+      r: Math.random() * 6.28, vr: (Math.random() - .5) * .05
+    });
+  }
+  spawn(40);
+  document.getElementById("burst").addEventListener("click", () => spawn(120));
+  (function tick() {
+    cx.clearRect(0, 0, W, H);
+    flakes.forEach(f => {
+      f.y += f.vy; f.ph += .02; f.x += Math.sin(f.ph) * f.sw; f.r += f.vr;
+      cx.save(); cx.translate(f.x, f.y); cx.rotate(f.r);
+      cx.fillStyle = f.c; cx.globalAlpha = .85;
+      cx.beginPath(); cx.ellipse(0, 0, f.s, f.s * .55, 0, 0, 6.29); cx.fill();
+      cx.restore();
+    });
+    flakes = flakes.filter(f => f.y < H + 30);
+    if (flakes.length < 25) spawn(10);
+    requestAnimationFrame(tick);
+  })();
+</script>
+</body>
+</html>
