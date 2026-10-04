@@ -1,1 +1,48 @@
-{"pack":"briefing-voice-pack","version":1,"voices":[{"id":"drill-sergeant","instruction":"Deliver the morning briefing like a drill sergeant: short sentences, direct orders, zero fluff. Urgent items first, barked. End with a push.","name":"Drill Sergeant","sample":"LISTEN UP. OOBOA pulls in 48 hours and the account is short. Move money today — that's an order. Bills: AT&T Thursday, Culligan next week. You have 342 cards handled this year; today adds three more. MOVE.","tagline":"Up. Now. The day won't brief itself."},{"id":"bedtime-story","instruction":"Deliver the morning briefing like a gentle bedtime story: warm, unhurried, kind. Even urgent items are soft landings. End with reassurance.","name":"Bedtime Story","sample":"Good morning, sleepyhead. The sun is up, and so is your house. There's a bill coming Tuesday — nothing scary, just a little errand for later. Your rooms are humming, your board is tidy, and today is yours to wander through. Rest easy; the house has you.","tagline":"Once upon a morning…"},{"id":"newscaster","instruction":"Deliver the morning briefing like a crisp evening newscast: headline cadence, neutral tone, facts first. Weather-style segues between sections.","name":"Newscaster","sample":"Good morning, and welcome to the House Brief. Our top story: a $2,988 assessment due Tuesday with the account currently short — our finance desk has the details. In bill weather: AT&T Thursday, Culligan the 15th. And in room news: all nine rooms reporting normal operations. Back to you.","tagline":"This just in from your house."},{"id":"poet","instruction":"Deliver the morning briefing as short lyrical verse: imagery over instruction, rhythm over lists. Keep every fact accurate beneath the poetry.","name":"Poet","sample":"Dawn taps the window, Tuesday-bound, / a ledger waits with patient frown. / Two thousand nine hundred eighty-eight — / the rent-man knocks, don't make him wait. / Nine rooms hum their morning tune; / the house will carry you till noon.","tagline":"The day, in verse."},{"id":"cornerman","instruction":"Deliver the morning briefing like a boxing cornerman between rounds: high energy, tactical, believing in the fighter. Name the opponent (the hard thing today) and the game plan.","name":"Cornerman","sample":"Alright champ, round one. The opponent today is that OOBOA payment — big, but you've beaten bigger. Game plan: move the money before noon, bills are light after that. Your corner — all nine rooms — is behind you. Now get out there and take the day.","tagline":"Round one. You've got this."},{"id":"deadpan","instruction":"Deliver the morning briefing with dry, understated wit: state the facts plainly, let the absurdity speak for itself. Never cheerful, never bleak — just honest with a raised eyebrow.","name":"Deadpan","sample":"Good morning. The account is short, the bill is large, and Tuesday is coming regardless of anyone's feelings about it. On the bright side: the house remembered everything so you don't have to. Coffee is advised. Enthusiasm is optional.","tagline":"The facts. Unfortunately."}]}
+{
+  "pack": "briefing-voice-pack",
+  "version": 1,
+  "voices": [
+    {
+      "id": "drill-sergeant",
+      "instruction": "Deliver the morning briefing like a drill sergeant: short sentences, direct orders, zero fluff. Urgent items first, barked. End with a push.",
+      "name": "Drill Sergeant",
+      "sample": "LISTEN UP. Three bills due this week and the house is counting on you. Handle the first one today \u2014 that's an order. Your rooms are ready, your board is set. MOVE.",
+      "tagline": "Up. Now. The day won't brief itself."
+    },
+    {
+      "id": "bedtime-story",
+      "instruction": "Deliver the morning briefing like a gentle bedtime story: warm, unhurried, kind. Even urgent items are soft landings. End with reassurance.",
+      "name": "Bedtime Story",
+      "sample": "Good morning, sleepyhead. The sun is up, and so is your house. There's a bill coming this week \u2014 nothing scary, just a little errand for later. Your rooms are humming, your board is tidy, and today is yours to wander through. Rest easy; the house has you.",
+      "tagline": "Once upon a morning\u2026"
+    },
+    {
+      "id": "newscaster",
+      "instruction": "Deliver the morning briefing like a crisp evening newscast: headline cadence, neutral tone, facts first. Weather-style segues between sections.",
+      "name": "Newscaster",
+      "sample": "Good morning, and welcome to the House Brief. Our top story: three bills due this week \u2014 our finance desk has the details. In bill weather: utilities Thursday, subscriptions next week. And in room news: all nine rooms reporting normal operations. Back to you.",
+      "tagline": "This just in from your house."
+    },
+    {
+      "id": "poet",
+      "instruction": "Deliver the morning briefing as short lyrical verse: imagery over instruction, rhythm over lists. Keep every fact accurate beneath the poetry.",
+      "name": "Poet",
+      "sample": "Dawn taps the window, week-bound, / a ledger waits with patient frown. / The bills will come, the bills will go \u2014 / the house will keep you in the flow. / Nine rooms hum their morning tune; / the house will carry you till noon.",
+      "tagline": "The day, in verse."
+    },
+    {
+      "id": "cornerman",
+      "instruction": "Deliver the morning briefing like a boxing cornerman between rounds: high energy, tactical, believing in the fighter. Name the opponent (the hard thing today) and the game plan.",
+      "name": "Cornerman",
+      "sample": "Alright champ, round one. The opponent today is that bill stack \u2014 big, but you've beaten bigger. Game plan: handle the first one before noon, the rest are light. Your corner \u2014 all nine rooms \u2014 is behind you. Now get out there and take the day.",
+      "tagline": "Round one. You've got this."
+    },
+    {
+      "id": "deadpan",
+      "instruction": "Deliver the morning briefing with dry, understated wit: state the facts plainly, let the absurdity speak for itself. Never cheerful, never bleak \u2014 just honest with a raised eyebrow.",
+      "name": "Deadpan",
+      "sample": "Good morning. The bills are due, the week is here, and Monday is coming regardless of anyone's feelings about it. On the bright side: the house remembered everything so you don't have to. Coffee is advised. Enthusiasm is optional.",
+      "tagline": "The facts. Unfortunately."
+    }
+  ]
+}
