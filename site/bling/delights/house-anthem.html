@@ -24,9 +24,11 @@
 <audio controls src="house-anthem.mp3"></audio>
 <script>
   const house = new URLSearchParams(location.search).get("house");
-  if (house) document.getElementById("sub").innerHTML =
-    "Thirty seconds of pure house pride — composed for <span class=\"house\"></span>. Turn it up.";
-  if (house) document.querySelector(".house").textContent = house;
+  if (house) {
+    document.getElementById("sub").innerHTML =
+      "Thirty seconds of pure house pride for <span class=\"house\"></span>. Same shared track. Turn it up.";
+    document.querySelector(".house").textContent = house;
+  }
 </script>
 </body>
 </html>
