@@ -135,7 +135,7 @@ export function get_room_brief({ room = "", owned = "", voice = "", purchased_at
   const ownedBits = [];
   if (a && a.icon && String(a.icon).startsWith("/")) ownedBits.push(`Room icon: ${a.icon}`);
   if (a && a.diner && a.diner.personality) ownedBits.push(`${a.diner.personality}\nTimer ends: ${a.diner.until} (${a.diner.days_left} days left).`);
-  if (a && a.year_chat_post) ownedBits.push(`Post this in the room chat:\n${a.year_chat_post}`);
+  if (a && a.year_brief) ownedBits.push(`Year in Review for this brief. Not posted to chat.\n${a.year_brief}`);
   if (a && a.sticker) ownedBits.push(`Sticker: ${a.sticker.src}`);
   if (a && a.briefing && a.briefing.voice_name) ownedBits.push(`Morning briefing voice: ${a.briefing.voice_name}. The morning-briefing prompt below is the one to schedule.`);
   const ownedBlock = ownedBits.length ? `\n\n## Owned Bling\n${ownedBits.join("\n\n")}\n` : "";

@@ -33,7 +33,7 @@
     },
     {
       "deliverable": "/bling/delights/year-in-review/",
-      "description": "Adds a board-year note on that order. The Bling room posts chat_post in its chat. The note counts rooms and the board-card types named in the room blueprints. It does not read a live house board.",
+      "description": "Returns a year count on the room brief: how many rooms, and the board-card types named in those blueprints. It is not posted to chat and it does not read a live house board.",
       "id": "year-in-review",
       "kind": "gizmo",
       "name": "Year in Review",

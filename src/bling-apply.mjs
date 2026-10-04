@@ -74,9 +74,9 @@ export function dinerState(purchasedAtMs, nowMs) {
   };
 }
 
-export function yearChatPost(rooms, year) {
+export function yearBriefNote(rooms, year) {
   const lines = [
-    `Board year ${year}, from the room blueprints this product ships (not a live house board).`,
+    `Board year ${year} count for the room brief. Not a sent chat message. Counted from the room blueprints this product ships (not a live house board).`,
     `${rooms.length} rooms.`,
   ];
   for (const r of rooms) {
@@ -133,7 +133,7 @@ export function applyBling({ rooms = [], briefingPrompt = "", owned, purchasedAt
     const purchasedAtMs = purchasedAt instanceof Date ? purchasedAt.getTime() : Date.parse(purchasedAt);
     diner = dinerState(purchasedAtMs, nowMs);
   }
-  const year_chat_post = set.has(BLING.year) ? yearChatPost(rooms, nowDate.getUTCFullYear()) : null;
+  const year_brief = set.has(BLING.year) ? yearBriefNote(rooms, nowDate.getUTCFullYear()) : null;
   const voices = set.has(BLING.voice) ? loadVoices() : [];
   let briefing = { prompt: briefingPrompt, changed: false, voice_id: null, voice_name: null, voices: voices.map((v) => ({ id: v.id, name: v.name })) };
   if (voices.length) {
@@ -141,7 +141,7 @@ export function applyBling({ rooms = [], briefingPrompt = "", owned, purchasedAt
     briefing = { ...briefingWithVoice(briefingPrompt, chosen), voices: briefing.voices };
   }
   const sticker = set.has(BLING.mystery) ? mysterySticker(seed || BLING.mystery) : null;
-  return { owned: [...set], rooms: view, seasonal, diner, year_chat_post, briefing, sticker };
+  return { owned: [...set], rooms: view, seasonal, diner, year_brief, briefing, sticker };
 }
 
 /** One paid order → the apply payload the Bling room already reads off the order feed. */
@@ -156,7 +156,7 @@ export function applyForOrder({ itemId, createdSec, nowMs, rooms, briefingPrompt
     voiceId: itemId === BLING.voice ? "newscaster" : "",
     seed: seed || itemId || "",
   });
-  return { room_apply, chat_post: room_apply.year_chat_post };
+  return { room_apply };
 }
 
 /** Room brief the host stamps. Copies mill specs before editing so the loaded JSON stays put. */
@@ -181,7 +181,7 @@ export function decorateRoomBrief(brief, opts = {}) {
       icon: mine ? mine.icon : null,
       icon_kind: mine ? mine.icon_kind : null,
       diner: brief.id === "bling" ? applied.diner : null,
-      year_chat_post: brief.id === "bling" ? applied.year_chat_post : null,
+      year_brief: brief.id === "bling" ? applied.year_brief : null,
       sticker: brief.id === "bling" ? applied.sticker : null,
       seasonal: applied.seasonal,
       briefing: applied.briefing.changed

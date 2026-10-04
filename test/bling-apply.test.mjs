@@ -29,11 +29,14 @@ test("diner personality is on for 30 days and then off", () => {
   assert.equal(missing.diner.active, false);
 });
 
-test("year note is a chat post from room blueprints", () => {
+test("year note is a brief count, not a chat post", () => {
   const out = applyBling({ rooms, owned: BLING.year, now: during });
-  assert.match(out.year_chat_post, /Board year 2026/);
-  assert.match(out.year_chat_post, /not a live house board/);
-  assert.match(out.year_chat_post, /BILL-DUE/);
+  assert.equal(out.chat_post, undefined);
+  assert.equal(out.year_chat_post, undefined);
+  assert.match(out.year_brief, /for the room brief/);
+  assert.match(out.year_brief, /Not a sent chat message/);
+  assert.match(out.year_brief, /not a live house board/);
+  assert.match(out.year_brief, /BILL-DUE/);
   const order = applyForOrder({
     itemId: BLING.year,
     createdSec: Date.parse(bought) / 1000,
@@ -42,7 +45,13 @@ test("year note is a chat post from room blueprints", () => {
     briefingPrompt: prompt,
     seed: "sess",
   });
-  assert.equal(order.chat_post, out.year_chat_post);
+  assert.equal(order.chat_post, undefined);
+  assert.equal(order.room_apply.year_brief, out.year_brief);
+  const text = get_room_brief({ room: "bling", owned: BLING.year }).content[0].text;
+  assert.match(text, /Not posted to chat/);
+  assert.equal(text.includes("Post this in the room chat"), false);
+  assert.equal(text.includes("posts chat_post"), false);
+  assert.equal(text.includes("post that"), false);
 });
 
 test("voice pack changes the morning briefing prompt", () => {

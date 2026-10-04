@@ -174,7 +174,6 @@ export async function handleBlingOrders(searchParams) {
           email: (s.customer_details || {}).email || null,
           created: s.created,
           room_apply: applied.room_apply,
-          chat_post: applied.chat_post,
         };
       })
       .sort((a, b) => b.created - a.created);

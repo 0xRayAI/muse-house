@@ -97,9 +97,12 @@
       p.textContent = "Diner timer needs the purchase time before the room voice changes.";
       box.appendChild(p);
     }
-    if (apply.year_chat_post) {
+    if (apply.year_brief) {
+      const note = document.createElement("p");
+      note.textContent = "Year in Review, for the brief. Not posted to chat.";
       const pre = document.createElement("pre");
-      pre.textContent = apply.year_chat_post;
+      pre.textContent = apply.year_brief;
+      box.appendChild(note);
       box.appendChild(pre);
     }
     if (apply.briefing && apply.briefing.changed) {
