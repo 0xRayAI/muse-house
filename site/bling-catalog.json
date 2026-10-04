@@ -12,15 +12,14 @@
       "image": "https://mymuse.house/bling/delights/stickers/sparkle.gif"
     },
     {
-      "deliverable": null,
-      "description": "A more embellished icon set for all nine rooms. Coming soon.",
+      "deliverable": "/bling/delights/neon-nights/",
+      "description": "A more embellished icon set for all nine rooms \u2014 thin-line neon, each room in its own glow.",
       "id": "neon-nights-icons",
       "kind": "trinket",
       "name": "Neon Nights icon pack",
       "price_cents": 300,
       "chat_asset": "sandbox://workspace/muse-house/site/bling/delights/stickers/gem.gif",
-      "image": "https://mymuse.house/bling/delights/stickers/gem.gif",
-      "coming_soon": true
+      "image": "https://mymuse.house/bling/delights/stickers/gem.gif"
     },
     {
       "deliverable": "/bling/delights/midnight-diner/",
