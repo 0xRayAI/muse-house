@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Neon Nights — Bling</title>
+<style>
+  :root { --bg: #0a0a12; --ink: #f5f7fa; --muted: #8a8fa3; }
+  * { box-sizing: border-box; margin: 0; }
+  body { background: var(--bg); color: var(--ink); font-family: system-ui, sans-serif;
+         min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 48px 20px; }
+  h1 { font-size: 2rem; letter-spacing: .02em; }
+  h1 .neon { color: #ff00e5; text-shadow: 0 0 18px #ff00e5, 0 0 46px #ff00e580; }
+  p.sub { color: var(--muted); margin: 12px 0 36px; max-width: 520px; text-align: center; line-height: 1.5; }
+  p.house { color: var(--muted); font-size: .9rem; margin-bottom: 28px; }
+  p.house strong { color: var(--ink); }
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; max-width: 640px; width: 100%; }
+  @media (max-width: 520px) { .grid { grid-template-columns: repeat(3, 1fr); gap: 10px; } }
+  .tile { background: #101018; border: 1px solid #1c1c2a; border-radius: 16px;
+          padding: 20px 12px; text-align: center; transition: transform .15s; }
+  .tile:hover { transform: translateY(-3px); }
+  .tile img { width: 84px; height: 84px; }
+  .tile .name { margin-top: 10px; font-size: .85rem; color: var(--muted); text-transform: capitalize; }
+  footer { margin-top: 44px; color: var(--muted); font-size: .8rem; }
+  footer a { color: #00e5ff; }
+</style>
+</head>
+<body>
+  <h1>Neon <span class="neon">Nights</span></h1>
+  <p class="sub">A more embellished icon set for all nine rooms — thin-line neon, each room in its own glow.</p>
+  <p class="house" id="houseLine"></p>
+  <div class="grid" id="grid"></div>
+  <footer><a href="/bling.html">← back to the Bling shop</a></footer>
+<script>
+  const rooms = ["travel","health","home","money","game","art","dev","coach","bling"];
+  const grid = document.getElementById("grid");
+  rooms.forEach(r => {
+    const d = document.createElement("div");
+    d.className = "tile";
+    d.innerHTML = `<img src="./${r}.png" alt="${r}"><div class="name">${r}</div>`;
+    grid.appendChild(d);
+  });
+  const house = new URLSearchParams(location.search).get("house");
+  if (house) document.getElementById("houseLine").innerHTML =
+    `Made for <strong>${house.replace(/</g,"&lt;")}</strong>'s house.`;
+</script>
+</body>
+</html>
