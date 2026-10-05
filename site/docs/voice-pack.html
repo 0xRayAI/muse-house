@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Voice Pack — House Components</title>
+<style>
+  * { box-sizing: border-box; margin: 0; }
+  body { background: #101014; color: #f5f7fa; font-family: system-ui, sans-serif; line-height: 1.65; padding: 48px 20px 60px; }
+  .wrap { max-width: 680px; margin: 0 auto; }
+  h1 { font-size: 1.8rem; margin-bottom: 8px; }
+  h2 { font-size: 1.25rem; margin: 32px 0 12px; color: #7dd3fc; }
+  p, li { color: #d4d4d8; margin-bottom: 10px; }
+  ul, ol { padding-left: 22px; }
+  code { background: #1e1e26; padding: 2px 7px; border-radius: 6px; font-size: .88em; color: #fbbf24; }
+  pre { background: #1e1e26; border: 1px solid #2a2a35; border-radius: 12px; padding: 16px 18px; overflow-x: auto; margin: 12px 0 16px; font-size: .85rem; }
+  pre code { background: none; padding: 0; color: #e4e4e7; }
+  table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: .9rem; }
+  th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid #2a2a35; }
+  th { color: #8a8fa3; font-size: .8rem; text-transform: uppercase; }
+  a { color: #7dd3fc; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Voice Pack</h1>
+  <p>Six voices for the morning briefing. Users hear each one, pick a favorite, and the 7am briefing switches.</p>
+  <h2>The 6 Voices</h2>
+  <table>
+    <tr><th>Voice</th><th>Style</th></tr>
+    <tr><td>Newscaster</td><td>Crisp headline cadence, neutral, facts first</td></tr>
+    <tr><td>Warm</td><td>Friendly, conversational, encouraging</td></tr>
+    <tr><td>Bright</td><td>Upbeat, optimistic, exclamation-friendly</td></tr>
+    <tr><td>Calm</td><td>Slow, steady, reassuring</td></tr>
+    <tr><td>Bold</td><td>Direct, punchy, no fluff</td></tr>
+    <tr><td>Gentle</td><td>Soft, kind, unhurried</td></tr>
+  </table>
+  <h2>Selection Flow</h2>
+  <ol>
+    <li>Bling room sends all 6 audio samples as chat attachments (play buttons).</li>
+    <li>User listens in the room — no website.</li>
+    <li>User says "I want the [voice] voice".</li>
+    <li>Room updates the <code>muse-house-morning-briefing</code> cron: changes the <code>VOICE:</code> line to the picked voice and its instruction.</li>
+    <li>Confirm: "Your briefing now speaks in {voice}. It'll sound like that tomorrow at 7am."</li>
+  </ol>
+  <h2>Audio Samples</h2>
+  <p>Samples use generic text (no names, no dollar amounts — PII rule). Hosted at <code>/bling/delights/voice-pack/voice-{id}.mp3</code>.</p>
+  <h2>Persistence</h2>
+  <p>The voice lives in the cron body itself — it stays until the user picks another. No settings page needed.</p>
+  <p style="margin-top:32px;"><a href="index.html">← All components</a></p>
+</div>
+</body>
+</html>
