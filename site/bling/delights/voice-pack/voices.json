@@ -1,6 +1,6 @@
 {
   "pack": "briefing-voice-pack",
-  "version": 2,
+  "version": 3,
   "voices": [
     {
       "id": "newscaster",
@@ -44,5 +44,6 @@
       "instruction": "Deliver the briefing gently: soft, kind, unhurried. Even urgent items are presented with care. End with reassurance.",
       "audio": "/bling/delights/voice-pack/voice-gentle.mp3"
     }
-  ]
+  ],
+  "redeploy_note": "version bump to force clean Railway redeploy (voice MP3s in tree but not served)"
 }
