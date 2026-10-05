@@ -21,6 +21,8 @@ import { readFileSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { timingSafeEqual } from "node:crypto";
+import { rooms, mill } from "./tools.mjs";
+import { applyForOrder } from "./bling-apply.mjs";
 
 const SITE_DIR = join(dirname(fileURLToPath(import.meta.url)), "..", "site");
 const SITE_URL = (process.env.SITE_URL || "https://mymuse.house").replace(/\/$/, "");
@@ -149,18 +151,31 @@ export async function handleBlingOrders(searchParams) {
     const sessions = await stripe.checkout.sessions.list({ limit: 25 });
     const orders = sessions.data
       .filter((s) => s.payment_status === "paid" || s.status === "complete")
-      .map((s) => ({
-        session_id: s.id,
-        item_id: (s.metadata || {}).bling_item_id || null,
-        item_name: (s.metadata || {}).bling_item_name || null,
-        house: (s.metadata || {}).bling_house && (s.metadata || {}).bling_house !== "(untagged)"
-          ? s.metadata.bling_house
-          : null,
-        amount_cents: s.amount_total,
-        currency: s.currency,
-        email: (s.customer_details || {}).email || null,
-        created: s.created,
-      }))
+      .map((s) => {
+        const itemId = (s.metadata || {}).bling_item_id || null;
+        const prompt = (mill["morning-briefing"] && mill["morning-briefing"].sections.prompt_template_for_the_cron_job_) || "";
+        const applied = applyForOrder({
+          itemId,
+          createdSec: s.created,
+          nowMs: Date.now(),
+          rooms,
+          briefingPrompt: prompt,
+          seed: s.id,
+        });
+        return {
+          session_id: s.id,
+          item_id: itemId,
+          item_name: (s.metadata || {}).bling_item_name || null,
+          house: (s.metadata || {}).bling_house && (s.metadata || {}).bling_house !== "(untagged)"
+            ? s.metadata.bling_house
+            : null,
+          amount_cents: s.amount_total,
+          currency: s.currency,
+          email: (s.customer_details || {}).email || null,
+          created: s.created,
+          room_apply: applied.room_apply,
+        };
+      })
       .sort((a, b) => b.created - a.created);
     return json(200, { orders });
   } catch (e) {
