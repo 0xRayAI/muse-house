@@ -1,5 +1,6 @@
 /**
- * tools.mjs — the 9 Muse House tools.
+ * tools.mjs — the 10 Muse House tools (9 rooms in data/rooms.json).
+ * Access: each TOOL_DEFS entry carries access: read | write | sensitive-write.
  * Stateless: loads bundled data/ at startup, keeps nothing per user.
  */
 import { readFileSync } from "node:fs";
@@ -355,7 +356,8 @@ export function get_feedback_form() {
 export const TOOL_DEFS = [
   {
     name: "suggest_utilities",
-    description: "Rank the Muse connectors (utilities) a household should turn on, given a profile and goal. Returns the curated catalog ranked by keyword fit, each with a one-line why.",
+    access: "read",
+    description: "[read] Rank the Muse connectors (utilities) a household should turn on, given a profile and goal. Returns the curated catalog ranked by keyword fit, each with a one-line why.",
     inputSchema: {
       type: "object",
       properties: {
@@ -367,7 +369,8 @@ export const TOOL_DEFS = [
   },
   {
     name: "suggest_steps",
-    description: "Build an ordered operating plan for a goal, given the utilities already chosen. Concrete steps the host agent executes: onboarding, per-utility setup, house minting, room stamping, mill startup.",
+    access: "read",
+    description: "[read] Build an ordered operating plan for a goal, given the utilities already chosen. Concrete steps the host agent executes: onboarding, per-utility setup, house minting, room stamping, mill startup. The tool itself only returns the plan.",
     inputSchema: {
       type: "object",
       properties: {
@@ -379,17 +382,19 @@ export const TOOL_DEFS = [
   },
   {
     name: "list_rooms",
-    description: "List the house room blueprints (money, travel, home, health, game, art, dev) with one-line descriptions.",
+    access: "read",
+    description: "[read] List the nine house room blueprints (art, bling, coach, dev, game, health, home, money, travel) with one-line descriptions.",
     inputSchema: { type: "object", properties: {} },
     fn: list_rooms,
   },
   {
     name: "get_room_brief",
-    description: "Full blueprint for one room: purpose, connectors, onboarding fills, mill jobs with full specs, board-card templates, ask-first list, and the side-chat seed brief. The host uses this to stamp the room's side chat.",
+    access: "read",
+    description: "[read] Full blueprint for one room: purpose, connectors, onboarding fills, mill jobs with full specs, board-card templates, ask-first list, and the side-chat seed brief. The host uses this to stamp the room's side chat.",
     inputSchema: {
       type: "object",
       properties: {
-        room: { type: "string", description: "Room id: money | travel | home | health | game | art | dev" },
+        room: { type: "string", description: "Room id: art | bling | coach | dev | game | health | home | money | travel" },
       },
       required: ["room"],
     },
@@ -397,7 +402,8 @@ export const TOOL_DEFS = [
   },
   {
     name: "get_house_template",
-    description: "Starter HOUSE.md and OP-PROC.md for a new household, with {{TOKENS}} filled where owner_name/timezone/spend_threshold are given. Remaining tokens are listed so the host can finish personalization.",
+    access: "read",
+    description: "[read] Starter HOUSE.md and OP-PROC.md for a new household, with {{TOKENS}} filled where owner_name/timezone/spend_threshold are given. Remaining tokens are listed so the host can finish personalization.",
     inputSchema: {
       type: "object",
       properties: {
@@ -410,7 +416,8 @@ export const TOOL_DEFS = [
   },
   {
     name: "stamp_rooms",
-    description: "Executable room-creation protocol for the host agent. Returns, per room, the exact side-chat name to create, the verbatim seed message to send first, and the mill jobs to schedule. The host executes the three actions per room in order — this is how rooms get created from the product.",
+    access: "read",
+    description: "[read] Executable room-creation protocol for the host agent. Returns, per room, the exact side-chat name to create, the verbatim seed message to send first, and the mill jobs to schedule. This MCP tool does not create chats or write to the host — it returns the plan; the host executes it.",
     inputSchema: {
       type: "object",
       properties: {
@@ -422,7 +429,8 @@ export const TOOL_DEFS = [
   },
   {
     name: "codex_check",
-    description: "Advisory check of a planned action against the 22-term consumer codex. Returns PASS, ADVISORY, or FLAG with matched terms cited. Not a hard gate — the host agent decides.",
+    access: "read",
+    description: "[read] Advisory check of a planned action against the 22-term consumer codex. Returns PASS, ADVISORY, or FLAG with matched terms cited. Not a hard gate — the host agent decides.",
     inputSchema: {
       type: "object",
       properties: {
@@ -434,12 +442,13 @@ export const TOOL_DEFS = [
   },
   {
     name: "send_feedback",
-    description: "Relay user feedback about Muse House to the team inbox. STRUCTURED form — call get_feedback_form first and present its fields. RULES: (1) Only call when the human explicitly asks to send feedback AND has confirmed the exact kind/room/summary/details you will send — show it verbatim, get a yes. Never speculative, never a side effect. (2) Never forward personal or private information: strip names, emails, phones, addresses, account numbers, financial figures; summarize the issue without them. The service redacts obvious patterns server-side as a backstop. The message goes to the Muse House team, not to any of the user's contacts.",
+    access: "sensitive-write",
+    description: "[sensitive-write] Relay user feedback about Muse House to the team inbox (durable offsite email via Resend). STRUCTURED form — call get_feedback_form first and present its fields. RULES: (1) Only call when the human explicitly asks to send feedback AND has confirmed the exact kind/room/summary/details you will send — show it verbatim, get a yes. Never speculative, never a side effect. (2) Never forward personal or private information: strip names, emails, phones, addresses, account numbers, financial figures; summarize the issue without them. The service redacts obvious patterns server-side as a backstop. Rate-limited; nothing stored server-side. The message goes to the Muse House team, not to any of the user's contacts.",
     inputSchema: {
       type: "object",
       properties: {
         kind: { type: "string", enum: ["Help", "Feedback", "Bug report", "Feature idea"], description: "What kind of feedback this is" },
-        room: { type: "string", enum: ["money", "travel", "home", "health", "game", "art", "dev", "website", "other"], description: "Which room (or the website) this is about" },
+        room: { type: "string", enum: ["money", "travel", "home", "health", "game", "art", "dev", "coach", "bling", "website", "other"], description: "Which room (or the website) this is about" },
         summary: { type: "string", description: "One-line summary (max 150 chars)" },
         details: { type: "string", description: "What happened, or what they'd like to see (max 2000 chars). No personal data." },
       },
@@ -449,13 +458,15 @@ export const TOOL_DEFS = [
   },
   {
     name: "get_feedback_form",
-    description: "Returns the feedback form schema: fields, allowed values, length limits, and the privacy note to show the human. Call this when the human wants to send feedback, present the fields conversationally, then show them the exact text and get an explicit yes before calling send_feedback.",
+    access: "read",
+    description: "[read] Returns the feedback form schema: fields, allowed values, length limits, and the privacy note to show the human. Call this when the human wants to send feedback, present the fields conversationally, then show them the exact text and get an explicit yes before calling send_feedback.",
     inputSchema: { type: "object", properties: {} },
     fn: get_feedback_form,
   },
   {
     name: "check_room_updates",
-    description: "Diff your house's recorded room blueprint versions against the live product. Pass {rooms: {art: 1, money: 1, ...}} with the versions your house tracks (get_house_template ships a room-versions table). Returns per-room upgrades: latest version, changelog since yours, and the upgrade path — 'patch' (send the included message to the existing room chat; history preserved) or 're-stamp' (export state, recreate via stamp_rooms, restore). Run weekly so rooms never go stale.",
+    access: "read",
+    description: "[read] Diff your house's recorded room blueprint versions against the live product. Pass {rooms: {art: 1, money: 1, ...}} with the versions your house tracks (get_house_template ships a room-versions table). Returns per-room upgrades: latest version, changelog since yours, and the upgrade path — 'patch' (send the included message to the existing room chat; history preserved) or 're-stamp' (export state, recreate via stamp_rooms, restore). Run weekly so rooms never go stale.",
     inputSchema: {
       type: "object",
       properties: {

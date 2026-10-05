@@ -1,9 +1,9 @@
 # Muse House — llms.txt
 
 Muse House is a stateless MCP blueprint service that turns a Muse assistant
-into a personal operating house: rooms (Money, Travel, Home, Health, Game,
-Art, Dev), a foundry that mints personalized setups, and a mill of daily
-routines.
+into a personal operating house: nine rooms (Art, Bling, Coach, Dev, Game,
+Health, Home, Money, Travel), a foundry that mints personalized setups, and
+a mill of daily routines.
 
 ## Endpoints
 
@@ -11,6 +11,7 @@ routines.
 - Health: GET https://mymuse.house/health
 - Website: https://mymuse.house/
 - Configurator: https://mymuse.house/configurator.html
+- Bling shop (website Stripe Checkout only): https://mymuse.house/bling.html
 - Privacy: https://mymuse.house/privacy.html
 - Terms: https://mymuse.house/terms.html
 - Source: https://github.com/0xRayAI/muse-house
@@ -20,33 +21,53 @@ routines.
 
 ## Auth
 
-None. The public blueprint tier needs no key or login. The service is
-stateless and stores no user data.
+Public blueprint tier (MCP tools that return blueprints): no key or login.
+The service is stateless and stores no user data. No connector OAuth is
+invented or required for blueprints.
+
+Token-protected website/API routes only (not MCP tools):
+- GET /api/bling/orders — requires BLING_API_TOKEN
+- POST /api/bling/dev/grant — requires BLING_DEV_TOKEN
 
 ## MCP tools (10)
 
-- suggest_utilities(profile, goal): rank Muse connectors a household should
-  turn on, with a one-line why each.
-- suggest_steps(goal, utilities): ordered operating plan the host executes.
-- list_rooms(): the nine room blueprints with one-line descriptions.
-- get_room_brief(room): full blueprint — purpose, connectors, onboarding
-  fills, mill jobs with specs, board cards, ask-first list, side-chat seed.
-- get_house_template(owner_name?, timezone?): starter HOUSE.md + OP-PROC.md
-  with {{TOKENS}} filled where given.
-- stamp_rooms(rooms, owner_name): the executable room-creation protocol —
-  returns the exact steps and verbatim seed the host sends to mint rooms.
-- codex_check(action): advisory PASS / ADVISORY / FLAG against the 22-term
-  consumer codex. Not a gate — the host decides.
-- send_feedback(kind, room, summary, details): relay user-initiated feedback
-  to the Muse House team. Only call when the human explicitly asks AND
-  confirms the exact text. Never forward personal data — the service
-  redacts obvious patterns server-side. Rate-limited; nothing is stored.
-- get_feedback_form(): the feedback form schema — fields, allowed values,
-  limits, privacy note. Present it conversationally before send_feedback.
-- check_room_updates(rooms): diff the house's recorded room blueprint
+Access labels: read | write | sensitive-write.
+
+- suggest_utilities(profile, goal) [read]: rank Muse connectors a household
+  should turn on, with a one-line why each.
+- suggest_steps(goal, utilities) [read]: ordered operating plan the host
+  executes. The tool only returns the plan.
+- list_rooms() [read]: the nine room blueprints with one-line descriptions
+  (art, bling, coach, dev, game, health, home, money, travel).
+- get_room_brief(room) [read]: full blueprint — purpose, connectors,
+  onboarding fills, mill jobs with specs, board cards, ask-first list,
+  side-chat seed.
+- get_house_template(owner_name?, timezone?) [read]: starter HOUSE.md +
+  OP-PROC.md with {{TOKENS}} filled where given.
+- stamp_rooms(rooms, owner_name) [read]: returns the executable room-creation
+  protocol (side-chat name, verbatim seed, mill jobs). This MCP tool does not
+  create chats or write to the host — the host executes the returned plan.
+- codex_check(action) [read]: advisory PASS / ADVISORY / FLAG against the
+  22-term consumer codex. Not a gate — the host decides.
+- send_feedback(kind, room, summary, details) [sensitive-write]: relay
+  user-initiated feedback to the Muse House team via durable offsite email.
+  Only call when the human explicitly asks AND confirms the exact text.
+  Never forward personal data — the service redacts obvious patterns
+  server-side. Rate-limited; nothing is stored.
+- get_feedback_form() [read]: the feedback form schema — fields, allowed
+  values, limits, privacy note. Present it conversationally before
+  send_feedback.
+- check_room_updates(rooms) [read]: diff the house's recorded room blueprint
   versions against the live product; returns upgrades with a patch
   (send to the room chat) or re-stamp (recreate via stamp_rooms) path.
   Run weekly.
+
+## Bling money posture
+
+Bling is the website shop at /bling.html. Purchases use Stripe Checkout on
+the website only. Cards stay on Stripe — this service never sees card
+numbers. Bling is not an MCP money-movement tool: no transfers, trades, or
+payments go through MCP. There are no Meta money tools here.
 
 ## Usage pattern
 

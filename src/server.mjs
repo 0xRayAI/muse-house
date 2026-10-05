@@ -85,6 +85,7 @@ async function handleMcpMessage(msg) {
           name: t.name,
           description: t.description,
           inputSchema: t.inputSchema,
+          ...(t.access ? { access: t.access } : {}),
         })),
       });
     case "tools/call": {
