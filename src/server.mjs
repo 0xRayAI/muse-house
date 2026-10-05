@@ -32,6 +32,10 @@ const MIME = {
   ".png": "image/png",
   ".ico": "image/x-icon",
   ".json": "application/json",
+  ".mp3": "audio/mpeg",
+  ".wav": "audio/wav",
+  ".ogg": "audio/ogg",
+  ".m4a": "audio/mp4",
   ".txt": "text/plain; charset=utf-8",
   ".xml": "application/xml; charset=utf-8",
 };
