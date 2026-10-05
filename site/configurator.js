@@ -84,8 +84,22 @@
 
   /* ---------- step 3: rooms (live from the connector) ---------- */
   var ROOM_ICONS = { money: "👛", travel: "✈️", home: "🏠", health: "❤️", game: "🎮", art: "🎨", dev: "💻", coach: "🎯", bling: "💎" };
+  function ownedQuery() {
+    try {
+      var ids = JSON.parse(localStorage.getItem("museBlingOwned") || "[]");
+      var q = {};
+      if (ids && ids.length) q.owned = ids.join(",");
+      var at = localStorage.getItem("museBlingPurchasedAt") || "";
+      if (at) q.purchased_at = at;
+      var voice = localStorage.getItem("museBlingVoice") || "";
+      if (voice) q.voice = voice;
+      return q;
+    } catch (e) {
+      return {};
+    }
+  }
   function loadRooms() {
-    api("rooms").then(function (data) {
+    api("rooms", ownedQuery()).then(function (data) {
       var rooms = data.rooms || [];
       var grid = document.getElementById("roomGrid");
       grid.innerHTML = "";
@@ -95,8 +109,12 @@
         btn.type = "button";
         btn.className = "pick-card" + (r.id === "money" ? " selected" : "");
         btn.dataset.room = r.id;
+        var icon = r.icon || ROOM_ICONS[r.id] || "◦";
+        var iconHtml = String(icon).charAt(0) === "/"
+          ? '<img src="' + escapeHtml(icon) + '" alt="" width="44" height="44">'
+          : escapeHtml(icon);
         btn.innerHTML =
-          '<p class="room-icon">' + (ROOM_ICONS[r.id] || "◦") + "</p>" +
+          '<p class="room-icon">' + iconHtml + "</p>" +
           "<h3>" + escapeHtml(r.name) + "</h3><p>" + escapeHtml(r.description || "") + "</p>";
         btn.addEventListener("click", function () { btn.classList.toggle("selected"); });
         grid.appendChild(btn);
@@ -202,7 +220,7 @@
       log("● House template minted", "ok");
       log("○ Minting " + state.rooms.length + " room blueprint(s)…", "run");
       return Promise.all(state.rooms.map(function (r) {
-        return api("room-brief", { room: r }).then(function (b) {
+        return api("room-brief", Object.assign({ room: r }, ownedQuery())).then(function (b) {
           log("● " + (state.roomMeta[r] ? state.roomMeta[r].name : r) + " room ready", "ok");
           return [r, b];
         });

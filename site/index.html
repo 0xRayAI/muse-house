@@ -320,6 +320,38 @@ document.querySelectorAll('.copy-btn').forEach(function (btn) {
   });
 });
 </script>
+<script>
+(function () {
+  var owned = [];
+  try { owned = JSON.parse(localStorage.getItem("museBlingOwned") || "[]"); } catch (e) { return; }
+  if (!owned.length) return;
+  var q = new URLSearchParams();
+  q.set("owned", owned.join(","));
+  var at = localStorage.getItem("museBlingPurchasedAt") || "";
+  if (at) q.set("purchased_at", at);
+  fetch("/api/rooms?" + q.toString()).then(function (r) { return r.json(); }).then(function (data) {
+    var byName = {};
+    (data.rooms || []).forEach(function (room) {
+      var label = room.name.replace(/^[^A-Za-z]+/, "").split(/[—-]/)[0].trim();
+      byName[label] = room;
+    });
+    document.querySelectorAll("#rooms .card.room").forEach(function (card) {
+      var h = card.querySelector("h3");
+      var icon = card.querySelector(".room-icon");
+      if (!h || !icon) return;
+      var room = byName[h.textContent.trim()];
+      if (!room || String(room.icon || "").charAt(0) !== "/") return;
+      icon.textContent = "";
+      var img = document.createElement("img");
+      img.src = room.icon;
+      img.alt = h.textContent.trim();
+      img.width = 44;
+      img.height = 44;
+      icon.appendChild(img);
+    });
+  }).catch(function () {});
+})();
+</script>
 
 </body>
 </html>

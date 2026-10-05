@@ -27,6 +27,8 @@ import { readFileSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { timingSafeEqual } from "node:crypto";
+import { rooms, mill } from "./tools.mjs";
+import { applyForOrder } from "./bling-apply.mjs";
 
 const SITE_DIR = join(dirname(fileURLToPath(import.meta.url)), "..", "site");
 const SITE_URL = (process.env.SITE_URL || "https://mymuse.house").replace(/\/$/, "");
@@ -162,6 +164,15 @@ export async function handleBlingOrders(searchParams) {
       .map((s) => {
         const itemId = (s.metadata || {}).bling_item_id || null;
         const item = items.find((i) => i.id === itemId);
+        const prompt = (mill["morning-briefing"] && mill["morning-briefing"].sections.prompt_template_for_the_cron_job_) || "";
+        const applied = applyForOrder({
+          itemId,
+          createdSec: s.created,
+          nowMs: Date.now(),
+          rooms,
+          briefingPrompt: prompt,
+          seed: s.id,
+        });
         return {
           session_id: s.id,
           item_id: itemId,
@@ -175,6 +186,7 @@ export async function handleBlingOrders(searchParams) {
           currency: s.currency,
           email: (s.customer_details || {}).email || null,
           created: s.created,
+          room_apply: applied.room_apply,
         };
       })
       .sort((a, b) => b.created - a.created);

@@ -29,6 +29,12 @@
   .bling-banner.ok { background: #e9f7ee; border: 1px solid #9fd8b4; }
   .bling-banner.info { background: #f4f1ea; border: 1px solid #e5e0d8; }
   .fineprint { font-size: .85rem; color: #8a8175; }
+  #bling-apply { margin-top: .75rem; }
+  #bling-apply img.sticker { width: 120px; height: 120px; }
+  #bling-apply .icons { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .5rem; }
+  #bling-apply .icons img { width: 44px; height: 44px; }
+  #bling-apply .voices { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .5rem; }
+  #bling-apply .voices button { background: #fff; color: #1c1a17; border: 1px solid #e5e0d8; border-radius: 999px; padding: .35rem .7rem; cursor: pointer; }
 </style>
 </head>
 <body>
@@ -42,8 +48,8 @@
   <p class="updated">Trinkets, gizmos, and surprise delights. Pay securely — we never see your card number.</p>
 
   <div id="banner-bought" class="bling-banner ok" role="status">
-    <strong>You're in! 🎉</strong> <span id="bought-item"></span> Your delight is on its way —
-    check your email for delivery details.
+    <strong>You're in! 🎉</strong> <span id="bought-item"></span>
+    <div id="bling-apply"></div>
   </div>
   <div id="banner-cancelled" class="bling-banner info" role="status">
     No worries — the checkout was cancelled and nothing was charged.
@@ -70,15 +76,96 @@
     document.getElementById("house-note").textContent =
       "This visit is tagged for house “" + houseTag + "” — your order will track back to it.";
   }
+  function rememberOwned(item) {
+    const cur = JSON.parse(localStorage.getItem("museBlingOwned") || "[]");
+    if (item && cur.indexOf(item) === -1) cur.push(item);
+    localStorage.setItem("museBlingOwned", JSON.stringify(cur));
+    if (!localStorage.getItem("museBlingPurchasedAt")) {
+      localStorage.setItem("museBlingPurchasedAt", new Date().toISOString());
+    }
+    return cur;
+  }
+  function renderApply(apply) {
+    const box = document.getElementById("bling-apply");
+    box.textContent = "";
+    if (apply.diner && apply.diner.personality) {
+      const p = document.createElement("p");
+      p.textContent = apply.diner.personality;
+      box.appendChild(p);
+    } else if (apply.diner && apply.diner.reason) {
+      const p = document.createElement("p");
+      p.textContent = "Diner timer needs the purchase time before the room voice changes.";
+      box.appendChild(p);
+    }
+    if (apply.year_brief) {
+      const note = document.createElement("p");
+      note.textContent = "Year in Review, for the brief. Not posted to chat.";
+      const pre = document.createElement("pre");
+      pre.textContent = apply.year_brief;
+      box.appendChild(note);
+      box.appendChild(pre);
+    }
+    if (apply.briefing && apply.briefing.changed) {
+      const p = document.createElement("p");
+      p.textContent = "Morning briefing voice: " + apply.briefing.voice_name + ".";
+      box.appendChild(p);
+      const voices = document.createElement("div");
+      voices.className = "voices";
+      (apply.briefing.voices || []).forEach(function (v) {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.textContent = v.name;
+        b.addEventListener("click", function () {
+          localStorage.setItem("museBlingVoice", v.id);
+          loadApply(rememberOwned(""));
+        });
+        voices.appendChild(b);
+      });
+      box.appendChild(voices);
+    }
+    if (apply.sticker) {
+      const img = document.createElement("img");
+      img.className = "sticker";
+      img.src = apply.sticker.src;
+      img.alt = apply.sticker.label;
+      box.appendChild(img);
+    }
+    const icons = (apply.rooms || []).filter(function (r) { return String(r.icon || "").charAt(0) === "/"; });
+    if (icons.length) {
+      const row = document.createElement("div");
+      row.className = "icons";
+      icons.forEach(function (r) {
+        const img = document.createElement("img");
+        img.src = r.icon;
+        img.alt = r.name;
+        row.appendChild(img);
+      });
+      box.appendChild(row);
+    }
+  }
+  async function loadApply(ids) {
+    const q = new URLSearchParams();
+    q.set("items", ids.filter(Boolean).join(","));
+    const at = localStorage.getItem("museBlingPurchasedAt") || "";
+    if (at) q.set("purchased_at", at);
+    const voice = localStorage.getItem("museBlingVoice") || "";
+    if (voice) q.set("voice", voice);
+    const house = (params.get("house") || "");
+    if (house) q.set("house", house);
+    const res = await fetch("/api/bling/apply?" + q.toString());
+    renderApply(await res.json());
+  }
   if (params.get("bought") === "1") {
     document.getElementById("banner-bought").style.display = "block";
     const item = params.get("item");
     const boughtHouse = params.get("house");
+    const ids = rememberOwned(item);
     let msg = "";
     if (item) msg += "Thanks for grabbing the " + item.replace(/-/g, " ") + ". ";
-    if (boughtHouse) msg += "Tell your Bling room it landed so it can file your order.";
-    else msg += "Tell your Bling room it landed so it can file your order.";
+    if (boughtHouse) msg += "Your Bling room reads this order off the order feed.";
+    else msg += "Your Bling room reads this order off the order feed.";
     document.getElementById("bought-item").textContent = msg;
+    loadApply(ids).catch(function () {});
   }
   if (params.get("cancelled") === "1") {
     document.getElementById("banner-cancelled").style.display = "block";
