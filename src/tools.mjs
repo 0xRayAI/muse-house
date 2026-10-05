@@ -390,6 +390,7 @@ export function get_feedback_form() {
 const SKILLS_REPO = "0xRayAI/muse-house-skills";
 const SKILL_MAX_FILES = 25;
 const SKILL_MAX_BYTES = 256 * 1024;
+const SKILL_MAX_DEPTH = 4; // nesting under skill id; root collect([id]) is depth 0
 
 export async function install_skill({ skill_id = "", session_id = "" } = {}) {
   const id = String(skill_id).trim().toLowerCase().replace(/[^a-z0-9-]/g, "");
@@ -420,7 +421,7 @@ export async function install_skill({ skill_id = "", session_id = "" } = {}) {
     const SAFE_NAME = /^[A-Za-z0-9._-]+$/;
     const encodePath = (parts) => parts.map(encodeURIComponent).join("/");
 
-    // Walk skill id + subdirs (e.g. assets/). Per-segment sanitize; caps across the tree.
+    // Walk skill id + subdirs (e.g. assets/). Per-segment sanitize; file/byte/depth caps across the tree.
     async function collect(parts, isRoot = false) {
       if (files.length >= SKILL_MAX_FILES) return { ok: true };
       const listRes = await fetch(
@@ -438,6 +439,8 @@ export async function install_skill({ skill_id = "", session_id = "" } = {}) {
         if (!SAFE_NAME.test(name)) continue;
         const next = [...parts, name];
         if (e.type === "dir") {
+          // depth = parts.length - 1 (root [id] = 0). Skip dirs deeper than SKILL_MAX_DEPTH.
+          if (parts.length - 1 >= SKILL_MAX_DEPTH) continue;
           const sub = await collect(next);
           if (sub && sub.oversized) return sub;
           continue;
