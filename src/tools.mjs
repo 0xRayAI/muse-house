@@ -415,30 +415,53 @@ export async function install_skill({ skill_id = "", session_id = "" } = {}) {
     "User-Agent": "muse-house-mcp",
   };
   try {
-    const listRes = await fetch(
-      `https://api.github.com/repos/${SKILLS_REPO}/contents/${encodeURIComponent(id)}`,
-      { headers }
-    );
-    if (!listRes.ok) {
-      return text(`install_skill error: skill \`${id}\` not found in the skills repo (HTTP ${listRes.status}).`);
-    }
-    const entries = await listRes.json();
     const files = [];
     let bytes = 0;
-    for (const e of Array.isArray(entries) ? entries : []) {
-      if (e.type !== "file" || !/^[A-Za-z0-9._-]+$/.test(e.name || "")) continue;
-      if (files.length >= SKILL_MAX_FILES) break;
-      const fRes = await fetch(
-        `https://api.github.com/repos/${SKILLS_REPO}/contents/${encodeURIComponent(id)}/${encodeURIComponent(e.name)}`,
-        { headers: { ...headers, Accept: "application/vnd.github.raw" } }
+    const SAFE_NAME = /^[A-Za-z0-9._-]+$/;
+    const encodePath = (parts) => parts.map(encodeURIComponent).join("/");
+
+    // Walk skill id + subdirs (e.g. assets/). Per-segment sanitize; caps across the tree.
+    async function collect(parts, isRoot = false) {
+      if (files.length >= SKILL_MAX_FILES) return { ok: true };
+      const listRes = await fetch(
+        `https://api.github.com/repos/${SKILLS_REPO}/contents/${encodePath(parts)}`,
+        { headers }
       );
-      if (!fRes.ok) continue;
-      const content = await fRes.text();
-      bytes += Buffer.byteLength(content);
-      if (bytes > SKILL_MAX_BYTES) {
-        return text(`install_skill error: skill \`${id}\` is larger than ${SKILL_MAX_BYTES} bytes — contact support@mymuse.house.`);
+      if (!listRes.ok) {
+        if (isRoot) return { ok: false, status: listRes.status };
+        return { ok: true };
       }
-      files.push({ path: `${id}/${e.name}`, content });
+      const entries = await listRes.json();
+      for (const e of Array.isArray(entries) ? entries : []) {
+        if (files.length >= SKILL_MAX_FILES) break;
+        const name = e.name || "";
+        if (!SAFE_NAME.test(name)) continue;
+        const next = [...parts, name];
+        if (e.type === "dir") {
+          const sub = await collect(next);
+          if (sub && sub.oversized) return sub;
+          continue;
+        }
+        if (e.type !== "file") continue;
+        const fRes = await fetch(
+          `https://api.github.com/repos/${SKILLS_REPO}/contents/${encodePath(next)}`,
+          { headers: { ...headers, Accept: "application/vnd.github.raw" } }
+        );
+        if (!fRes.ok) continue;
+        const content = await fRes.text();
+        bytes += Buffer.byteLength(content);
+        if (bytes > SKILL_MAX_BYTES) return { ok: true, oversized: true };
+        files.push({ path: next.join("/"), content });
+      }
+      return { ok: true };
+    }
+
+    const root = await collect([id], true);
+    if (!root.ok) {
+      return text(`install_skill error: skill \`${id}\` not found in the skills repo (HTTP ${root.status}).`);
+    }
+    if (root.oversized) {
+      return text(`install_skill error: skill \`${id}\` is larger than ${SKILL_MAX_BYTES} bytes — contact support@mymuse.house.`);
     }
     if (!files.length) return text(`install_skill error: skill \`${id}\` has no files.`);
     const fileBlocks = files
