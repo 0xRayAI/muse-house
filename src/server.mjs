@@ -11,7 +11,7 @@
  * board lives with their own Muse agent, never here.
  */
 import { createServer } from "node:http";
-import { readFileSync, existsSync, statSync } from "node:fs";
+import { readFileSync, existsSync } from "node:fs";
 import { join, dirname, normalize } from "node:path";
 import { fileURLToPath } from "node:url";
 import { TOOL_DEFS } from "./tools.mjs";
@@ -32,6 +32,10 @@ const MIME = {
   ".png": "image/png",
   ".ico": "image/x-icon",
   ".json": "application/json",
+  ".mp3": "audio/mpeg",
+  ".wav": "audio/wav",
+  ".ogg": "audio/ogg",
+  ".m4a": "audio/mp4",
   ".txt": "text/plain; charset=utf-8",
   ".xml": "application/xml; charset=utf-8",
 };
@@ -40,13 +44,9 @@ const MIME = {
 function serveSite(req, res) {
   const raw = req.url === "/" ? "/index.html" : req.url.split("?")[0];
   const safe = normalize(raw).replace(/^(\.\.[/\\])+/, "");
-  let file = join(SITE_DIR, safe);
+  const file = join(SITE_DIR, safe);
   if (!file.startsWith(SITE_DIR) || !existsSync(file)) return false;
-  if (statSync(file).isDirectory()) {
-    file = join(file, "index.html");
-    if (!existsSync(file)) return false;
-  }
-  const ext = file.slice(file.lastIndexOf("."));
+  const ext = safe.slice(safe.lastIndexOf("."));
   res.writeHead(200, { "content-type": MIME[ext] || "application/octet-stream" });
   res.end(readFileSync(file));
   return true;
@@ -85,7 +85,6 @@ async function handleMcpMessage(msg) {
           name: t.name,
           description: t.description,
           inputSchema: t.inputSchema,
-          ...(t.access ? { access: t.access } : {}),
         })),
       });
     case "tools/call": {
