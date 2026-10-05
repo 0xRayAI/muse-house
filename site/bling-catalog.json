@@ -49,7 +49,8 @@
       "name": "Briefing voice pack",
       "price_cents": 700,
       "chat_asset": "sandbox://workspace/muse-house/bling/delights/stickers/mic.gif",
-      "image": "https://mymuse.house/bling/delights/stickers/mic.gif"
+      "image": "https://mymuse.house/bling/delights/stickers/mic.gif",
+      "skill": "voice-briefing"
     },
     {
       "deliverable": "/bling/delights/mystery-drop/",

@@ -17,7 +17,7 @@ consumer-codex checks.
 - **Advisory governance.** `codex_check` cites the 22-term consumer codex and
   returns PASS / ADVISORY / FLAG. It is not a gate; the host agent decides.
 
-## Tools (10) · Rooms (9)
+## Tools (11) · Rooms (9)
 
 Access: **read** | **write** | **sensitive-write**. Nine rooms in `data/rooms.json`: art, bling, coach, dev, game, health, home, money, travel.
 
@@ -33,6 +33,7 @@ Access: **read** | **write** | **sensitive-write**. Nine rooms in `data/rooms.js
 | `send_feedback` | sensitive-write | kind, room, summary, details | Relays user-confirmed feedback to the team inbox (durable offsite email). Rate-limited; nothing stored. |
 | `get_feedback_form` | read | — | Feedback form schema for consistent host presentation. |
 | `check_room_updates` | read | rooms{} | Diff recorded room versions vs live blueprints; patch or re-stamp path. |
+| `install_skill` | write | skill_id, session_id | Purchased skill files + host write instructions. Entitlement-gated: Stripe must confirm the Checkout session is paid and its Bling item sells that skill, else refusal and no files. Never moves money. |
 
 ## Run locally
 

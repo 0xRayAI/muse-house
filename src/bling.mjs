@@ -11,6 +11,12 @@
  *   STRIPE_WEBHOOK_SECRET — required for webhook verification.
  *   BLING_TO              — fulfillment inbox (default support@mymuse.house).
  *   SITE_URL              — public base URL (default https://mymuse.house).
+ *   SKILLS_REPO_TOKEN     — GitHub token with read access to the private
+ *                           0xRayAI/muse-house-skills repo. Used only by the
+ *                           install_skill MCP tool, and only AFTER a paid
+ *                           entitlement is verified (verifySkillEntitlement).
+ *                           Without it, install_skill refuses and skill-backed
+ *                           items fall back to the email fulfillment path.
  *
  * Without STRIPE_SECRET_KEY every checkout attempt returns
  * { error: "payments_not_configured" } — the shop shows "coming soon"
@@ -88,7 +94,7 @@ export async function handleBlingCheckout(body) {
   }
 }
 
-async function notifyFulfillment({ itemName, amountTotal, currency, customerEmail, sessionId, house, deliverable }) {
+async function notifyFulfillment({ itemName, amountTotal, currency, customerEmail, sessionId, house, deliverable, skill }) {
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) {
     console.error("bling: RESEND_API_KEY missing — cannot notify fulfillment");
@@ -100,6 +106,9 @@ async function notifyFulfillment({ itemName, amountTotal, currency, customerEmai
   const deliverLine = deliverable
     ? `\nDeliver it here: ${SITE_URL}${deliverable}\n`
     : `\nMade-to-order: reply to the customer email to arrange delivery.\n`;
+  const skillLine = skill
+    ? `\nSkill: ${skill} — the buyer's Bling room can call the install_skill MCP tool with skill_id="${skill}" and session_id="${sessionId}" (paid Stripe Checkout session required; dev grants do not unlock skill files).\n`
+    : "";
   try {
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -114,7 +123,7 @@ async function notifyFulfillment({ itemName, amountTotal, currency, customerEmai
           `House: ${house || "(no house tag given)"}\n` +
           `Amount: $${amount} ${String(currency || "usd").toUpperCase()}\n` +
           `Customer email: ${customerEmail || "(not provided)"}\n` +
-          `Stripe session: ${sessionId}\n` + deliverLine +
+          `Stripe session: ${sessionId}\n` + deliverLine + skillLine +
           `\n—\nSent via Muse House Bling`,
       }),
     });
@@ -147,20 +156,27 @@ export async function handleBlingOrders(searchParams) {
   if (!stripe) return json(503, { error: "payments_not_configured" });
   try {
     const sessions = await stripe.checkout.sessions.list({ limit: 25 });
+    const items = getCatalog().items || [];
     const orders = sessions.data
       .filter((s) => s.payment_status === "paid" || s.status === "complete")
-      .map((s) => ({
-        session_id: s.id,
-        item_id: (s.metadata || {}).bling_item_id || null,
-        item_name: (s.metadata || {}).bling_item_name || null,
-        house: (s.metadata || {}).bling_house && (s.metadata || {}).bling_house !== "(untagged)"
-          ? s.metadata.bling_house
-          : null,
-        amount_cents: s.amount_total,
-        currency: s.currency,
-        email: (s.customer_details || {}).email || null,
-        created: s.created,
-      }))
+      .map((s) => {
+        const itemId = (s.metadata || {}).bling_item_id || null;
+        const item = items.find((i) => i.id === itemId);
+        return {
+          session_id: s.id,
+          item_id: itemId,
+          item_name: (s.metadata || {}).bling_item_name || null,
+          skill: (item && item.skill) || null,
+          payment_status: s.payment_status || null,
+          house: (s.metadata || {}).bling_house && (s.metadata || {}).bling_house !== "(untagged)"
+            ? s.metadata.bling_house
+            : null,
+          amount_cents: s.amount_total,
+          currency: s.currency,
+          email: (s.customer_details || {}).email || null,
+          created: s.created,
+        };
+      })
       .sort((a, b) => b.created - a.created);
     return json(200, { orders });
   } catch (e) {
@@ -244,7 +260,63 @@ export async function handleBlingWebhook(rawBody, signature) {
       sessionId: s.id,
       house: meta.bling_house && meta.bling_house !== "(untagged)" ? meta.bling_house : "",
       deliverable: item && item.deliverable ? item.deliverable : "",
+      skill: item && item.skill ? item.skill : "",
     });
   }
   return json(200, { received: true });
+}
+
+/**
+ * verifySkillEntitlement — the purchase gate in front of install_skill.
+ *
+ * Stateless: nothing is stored here. The proof of purchase is the buyer's
+ * Stripe Checkout session id (what /api/bling/orders and the fulfillment
+ * email already carry). We ask Stripe for that session and only entitle when
+ * ALL of these hold:
+ *   - Stripe is configured on this deployment (otherwise: fail closed);
+ *   - session_id looks like a real Checkout session (cs_live_… / cs_test_…);
+ *     dev grants (dev_…) never unlock skill files;
+ *   - Stripe returns the session with payment_status === "paid";
+ *   - the session's bling_item_id is a catalog item whose `skill` is the
+ *     requested skill_id.
+ *
+ * Honest limits: the session id is a bearer proof — anyone holding a paid
+ * session id for that item can install the skill, and with no server state
+ * there is no one-time redemption. Returns { ok: true, item, session_id } or
+ * { ok: false, reason, message }.
+ */
+export async function verifySkillEntitlement({ skill_id = "", session_id = "" } = {}) {
+  const skill = String(skill_id || "").trim();
+  const sid = String(session_id || "").trim();
+  const items = getCatalog().items || [];
+  const skillItems = items.filter((i) => i.skill && i.skill === skill);
+  if (!skill || !skillItems.length) {
+    return { ok: false, reason: "unknown_skill", message: `no Bling catalog item sells skill \`${skill || "(empty)"}\`.` };
+  }
+  if (!sid) {
+    return { ok: false, reason: "no_entitlement", message: "missing session_id — skill files are only returned for a paid Bling purchase (pass the Stripe Checkout session id from /api/bling/orders)." };
+  }
+  if (!/^cs_(live|test)_[A-Za-z0-9]{8,200}$/.test(sid)) {
+    return { ok: false, reason: "no_entitlement", message: "session_id is not a Stripe Checkout session id (cs_live_… / cs_test_…). Dev grants and other ids do not unlock skill files." };
+  }
+  const stripe = await stripeClient().catch(() => null);
+  if (!stripe) {
+    return { ok: false, reason: "payments_not_configured", message: "payments are not configured on this deployment, so the purchase cannot be verified — no skill files returned." };
+  }
+  let s;
+  try {
+    s = await stripe.checkout.sessions.retrieve(sid);
+  } catch (e) {
+    console.error("bling: entitlement lookup failed:", String((e && e.message) || e));
+    return { ok: false, reason: "no_entitlement", message: "that Checkout session could not be verified with Stripe — no skill files returned." };
+  }
+  if (!s || s.payment_status !== "paid") {
+    return { ok: false, reason: "not_paid", message: `that Checkout session is not paid (payment_status: ${(s && s.payment_status) || "unknown"}) — no skill files returned.` };
+  }
+  const itemId = (s.metadata || {}).bling_item_id || "";
+  const item = skillItems.find((i) => i.id === itemId);
+  if (!item) {
+    return { ok: false, reason: "wrong_item", message: `that purchase (${itemId || "unknown item"}) does not include skill \`${skill}\` — no skill files returned.` };
+  }
+  return { ok: true, item, session_id: s.id };
 }
