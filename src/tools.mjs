@@ -1,5 +1,5 @@
 /**
- * tools.mjs — the 10 Muse House tools (9 rooms in data/rooms.json).
+ * tools.mjs — the 11 Muse House tools (9 rooms in data/rooms.json).
  * Access: each TOOL_DEFS entry carries access: read | write | sensitive-write.
  * Stateless: loads bundled data/ at startup, keeps nothing per user.
  */
@@ -8,6 +8,8 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { validateFeedback, normalizeFeedback, sendFeedbackEmail, mcpFeedbackAllowed, getFeedbackForm } from "./feedback.mjs";
 import { decorateRoomBrief } from "./bling-apply.mjs";
+// bling.mjs imports tools.mjs (rooms/mill, #20) — load it lazily in
+// install_skill to keep the module graph acyclic.
 
 const DATA = join(dirname(fileURLToPath(import.meta.url)), "..", "data");
 const load = (f) => JSON.parse(readFileSync(join(DATA, f), "utf8"));
@@ -366,6 +368,94 @@ export function get_feedback_form() {
   );
 }
 
+// ---------------------------------------------------------------- install_skill
+/**
+ * install_skill — return a purchased skill's files so the host agent can
+ * install it into the buyer's house.
+ *
+ * Flow: customer buys a skill-backed Bling item via website Stripe Checkout →
+ * Stripe webhook fires → the Bling room polls /api/bling/orders, sees the
+ * paid order (session_id + skill) → calls install_skill { skill_id,
+ * session_id } → ENTITLEMENT GATE (verifySkillEntitlement: Stripe says the
+ * session is paid AND its item sells this skill) → only then are the files
+ * fetched from the private skills repo and returned → host writes them.
+ *
+ * No paid entitlement → no files, and the skills repo is never contacted.
+ * This tool never charges, refunds, or moves money; Stripe Checkout on the
+ * website is the only payment path.
+ *
+ * Auth: SKILLS_REPO_TOKEN env (read access to private 0xRayAI/muse-house-skills).
+ * The token never leaves the server; only skill file contents are returned.
+ */
+const SKILLS_REPO = "0xRayAI/muse-house-skills";
+const SKILL_MAX_FILES = 25;
+const SKILL_MAX_BYTES = 256 * 1024;
+
+export async function install_skill({ skill_id = "", session_id = "" } = {}) {
+  const id = String(skill_id).trim().toLowerCase().replace(/[^a-z0-9-]/g, "");
+  if (!id) return text("install_skill error: missing skill_id.");
+
+  // Purchase / entitlement gate — runs BEFORE any skill file is fetched.
+  const { verifySkillEntitlement } = await import("./bling.mjs");
+  const ent = await verifySkillEntitlement({ skill_id: id, session_id });
+  if (!ent.ok) {
+    return text(`install_skill refused (${ent.reason}): ${ent.message}`);
+  }
+
+  const token = process.env.SKILLS_REPO_TOKEN;
+  if (!token) {
+    return text(
+      `install_skill unavailable: purchase verified (${ent.item.name}), but the skills repo is not connected on this deployment. ` +
+      "Fall back to the email fulfillment path — the order already notified support@mymuse.house with the skill id and house."
+    );
+  }
+  const headers = {
+    "Authorization": `Bearer ${token}`,
+    "Accept": "application/vnd.github+json",
+    "User-Agent": "muse-house-mcp",
+  };
+  try {
+    const listRes = await fetch(
+      `https://api.github.com/repos/${SKILLS_REPO}/contents/${encodeURIComponent(id)}`,
+      { headers }
+    );
+    if (!listRes.ok) {
+      return text(`install_skill error: skill \`${id}\` not found in the skills repo (HTTP ${listRes.status}).`);
+    }
+    const entries = await listRes.json();
+    const files = [];
+    let bytes = 0;
+    for (const e of Array.isArray(entries) ? entries : []) {
+      if (e.type !== "file" || !/^[A-Za-z0-9._-]+$/.test(e.name || "")) continue;
+      if (files.length >= SKILL_MAX_FILES) break;
+      const fRes = await fetch(
+        `https://api.github.com/repos/${SKILLS_REPO}/contents/${encodeURIComponent(id)}/${encodeURIComponent(e.name)}`,
+        { headers: { ...headers, Accept: "application/vnd.github.raw" } }
+      );
+      if (!fRes.ok) continue;
+      const content = await fRes.text();
+      bytes += Buffer.byteLength(content);
+      if (bytes > SKILL_MAX_BYTES) {
+        return text(`install_skill error: skill \`${id}\` is larger than ${SKILL_MAX_BYTES} bytes — contact support@mymuse.house.`);
+      }
+      files.push({ path: `${id}/${e.name}`, content });
+    }
+    if (!files.length) return text(`install_skill error: skill \`${id}\` has no files.`);
+    const fileBlocks = files
+      .map((f) => `### ${f.path}\n\`\`\`\n${f.content}\n\`\`\``)
+      .join("\n\n");
+    return text(
+      `# Skill: ${id} — ${files.length} file(s)\n\n` +
+      `Entitlement: paid Bling purchase verified with Stripe (${ent.item.name}, session ${ent.session_id}).\n\n` +
+      `**Host:** with the human's OK, write each file below to the house's skills directory ` +
+      `(\`~/workspace/skills/${id}/\`), creating the directory if needed. ` +
+      `Then confirm to the human: "${id} installed."\n\n---\n\n${fileBlocks}`
+    );
+  } catch (e) {
+    return text(`install_skill error: could not reach the skills repo — ${String((e && e.message) || e)}`);
+  }
+}
+
 export const TOOL_DEFS = [
   {
     name: "suggest_utilities",
@@ -495,5 +585,19 @@ export const TOOL_DEFS = [
       required: ["rooms"],
     },
     fn: check_room_updates,
+  },
+  {
+    name: "install_skill",
+    access: "write",
+    description: "[write] Install a purchased product skill into the buyer's house. Requires proof of a PAID Bling purchase: pass the Stripe Checkout session_id (from /api/bling/orders) plus the item's skill_id. The server verifies with Stripe that the session is paid and that its item sells this skill; without that entitlement it refuses and returns no files. On success it returns the skill files with write instructions — this tool does not write anything itself; the host writes the files to the house's skills directory with the human's OK. Never charges or moves money (website Stripe Checkout is the only payment path). Requires Stripe + SKILLS_REPO_TOKEN on the deployment; otherwise refuses or falls back to email fulfillment.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        skill_id: { type: "string", description: "Skill id from the catalog item's skill field, e.g. 'voice-briefing'" },
+        session_id: { type: "string", description: "Stripe Checkout session id of the paid Bling purchase (cs_live_… / cs_test_…), from /api/bling/orders" },
+      },
+      required: ["skill_id", "session_id"],
+    },
+    fn: install_skill,
   },
 ];

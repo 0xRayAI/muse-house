@@ -28,10 +28,10 @@ Use this when applying at https://muse.ai/platform (work-email login required).
 - **Endpoint (MCP, Streamable HTTP):** `POST https://mymuse.house/mcp`
 - **Response format:** single `application/json` body per POST (no SSE).
   Stateless — no session IDs, no `Mcp-Session-Id` header.
-- **Auth:** public blueprint MCP tier needs no key or login. Token-protected website routes only: `GET /api/bling/orders` (`BLING_API_TOKEN`), `POST /api/bling/dev/grant` (`BLING_DEV_TOKEN`). No connector OAuth is required or invented for blueprints.
+- **Auth:** public blueprint MCP tier needs no key or login. Token-protected website routes only: `GET /api/bling/orders` (`BLING_API_TOKEN`), `POST /api/bling/dev/grant` (`BLING_DEV_TOKEN`). No connector OAuth is required or invented for blueprints. `install_skill` needs no login but returns files only with proof of a paid Bling purchase (Stripe Checkout session id, verified with Stripe server-side).
 - **Health:** `GET https://mymuse.house/health`
-  → `{"status":"ok","service":"muse-house","version":"0.1.0","tools":10,"stateless":true}`
-- **Tools (10)** with access labels:
+  → `{"status":"ok","service":"muse-house","version":"0.1.0","tools":11,"stateless":true}`
+- **Tools (11)** with access labels:
   - **read:** `suggest_utilities`, `suggest_steps`, `list_rooms`,
     `get_room_brief`, `get_house_template`, `stamp_rooms` (returns host
     plan only — does not create chats), `codex_check` (advisory, not a
@@ -40,8 +40,13 @@ Use this when applying at https://muse.ai/platform (work-email login required).
     durable offsite email to the support inbox; only when the human
     explicitly asks AND confirms the exact text; PII redacted server-side;
     rate-limited; nothing stored)
+  - **write:** `install_skill` (skill_id + session_id; **entitlement-gated** —
+    returns a purchased skill's files only after Stripe confirms that
+    Checkout session is paid and its Bling item sells that skill; unpaid,
+    unknown, dev-grant, or unverifiable sessions get a refusal and no files;
+    the host writes the files with the human's OK; never charges or moves money)
 - **Test calls for review:**
-  - `tools/list` → 10 tools
+  - `tools/list` → 11 tools
   - `tools/call get_room_brief {"room":"money"}` → full Money Room blueprint
   - `tools/call stamp_rooms {"rooms":"health","owner_name":"Alex"}` → executable room-creation protocol
   - `tools/call codex_check {"action":"pay the electric bill"}` → FLAG with term cited
@@ -91,7 +96,7 @@ Use this when applying at https://muse.ai/platform (work-email login required).
 
 1. `GET /health` → 200, `status: ok`.
 2. `POST /mcp` `initialize` → `serverInfo.name: muse-house`.
-3. `POST /mcp` `tools/list` → 10 tools.
+3. `POST /mcp` `tools/list` → 11 tools.
 4. `POST /mcp` `tools/call suggest_utilities` → ranked connector list.
 5. Open https://mymuse.house/configurator.html,
    complete the 6-step wizard → house pack minted in-browser, setup prompt
