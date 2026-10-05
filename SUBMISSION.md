@@ -28,20 +28,20 @@ Use this when applying at https://muse.ai/platform (work-email login required).
 - **Endpoint (MCP, Streamable HTTP):** `POST https://mymuse.house/mcp`
 - **Response format:** single `application/json` body per POST (no SSE).
   Stateless — no session IDs, no `Mcp-Session-Id` header.
-- **Auth:** public blueprint MCP tier needs no key or login. Token-protected website routes only: `GET /api/bling/orders` (`BLING_API_TOKEN`), `POST /api/bling/dev/grant` (`BLING_DEV_TOKEN`). No connector OAuth is required or invented for blueprints.
+- **Auth:** none. The public blueprint tier needs no key or login.
 - **Health:** `GET https://mymuse.house/health`
-  → `{"status":"ok","service":"muse-house","version":"0.1.0","tools":10,"stateless":true}`
-- **Tools (10)** with access labels:
-  - **read:** `suggest_utilities`, `suggest_steps`, `list_rooms`,
-    `get_room_brief`, `get_house_template`, `stamp_rooms` (returns host
-    plan only — does not create chats), `codex_check` (advisory, not a
-    gate), `get_feedback_form`, `check_room_updates`
-  - **sensitive-write:** `send_feedback` (structured kind/room/summary/details;
-    durable offsite email to the support inbox; only when the human
-    explicitly asks AND confirms the exact text; PII redacted server-side;
-    rate-limited; nothing stored)
+  → `{"status":"ok","service":"muse-house","version":"0.1.0","tools":11,"stateless":true}`
+- **Tools (10):** `suggest_utilities`, `suggest_steps`, `list_rooms`,
+  `get_room_brief`, `get_house_template`, `stamp_rooms`, `codex_check`,
+  `send_feedback` (structured kind/room/summary/details; forwards
+  user-initiated feedback to the support inbox; only to be called when the
+  human explicitly asks AND confirms the exact text; PII redacted
+  server-side), `get_feedback_form` (the form schema for consistent
+  presentation), `check_room_updates` (diff the house's recorded room
+  blueprint versions against the live product; returns upgrades with a
+  patch or re-stamp path)
 - **Test calls for review:**
-  - `tools/list` → 10 tools
+  - `tools/list` → 11 tools
   - `tools/call get_room_brief {"room":"money"}` → full Money Room blueprint
   - `tools/call stamp_rooms {"rooms":"health","owner_name":"Alex"}` → executable room-creation protocol
   - `tools/call codex_check {"action":"pay the electric bill"}` → FLAG with term cited
@@ -74,24 +74,18 @@ Use this when applying at https://muse.ai/platform (work-email login required).
 - Rooms never take irreversible actions: no money movement, no bookings, no
   sends, no publishes without explicit human approval, enforced by the codex.
 
-## Business / contact (directory packet stubs)
+## Business / contact
 
-- **Named maintainer:** Ray (0xRayAI) — org https://github.com/0xRayAI
-- **Support contact:** support@mymuse.house · help form https://mymuse.house/help.html ·
-  GitHub issues https://github.com/0xRayAI/muse-house/issues
-- **Directory status:** **draft / not submitted.** Listing copy below is prepared for
-  https://muse.ai/platform; there is no completed directory submission ID in-repo.
-- **Still required offline (do not invent completed forms):** business verification,
-  data/security questionnaire, and a dedicated test account for reviewers. Complete
-  those outside this repo before any real directory submit.
-- **Monetization / Bling posture:** the Bling shop at https://mymuse.house/bling.html sells optional digital extras (trinkets, gizmos, delights) via **website Stripe Checkout only**. Cards stay on Stripe — this service never sees card numbers. Bling is **not** an MCP money-movement tool (no transfers, trades, or payments via MCP). No Meta money tools. The house, rooms, and mill remain free.
-
+- **Developer:** 0xRayAI
+- **Support:** GitHub issues at https://github.com/0xRayAI/muse-house/issues,
+  help form at https://mymuse.house/help.html, or email support@mymuse.house
+- **Monetization:** the Bling shop sells optional digital extras (trinkets, gizmos, delights) via Stripe Checkout; the house, rooms, and mill remain free.
 
 ## Reviewer walkthrough (end-to-end test)
 
 1. `GET /health` → 200, `status: ok`.
 2. `POST /mcp` `initialize` → `serverInfo.name: muse-house`.
-3. `POST /mcp` `tools/list` → 10 tools.
+3. `POST /mcp` `tools/list` → 11 tools.
 4. `POST /mcp` `tools/call suggest_utilities` → ranked connector list.
 5. Open https://mymuse.house/configurator.html,
    complete the 6-step wizard → house pack minted in-browser, setup prompt

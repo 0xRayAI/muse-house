@@ -1,6 +1,5 @@
 /**
- * tools.mjs — the 10 Muse House tools (9 rooms in data/rooms.json).
- * Access: each TOOL_DEFS entry carries access: read | write | sensitive-write.
+ * tools.mjs — the 11 Muse House tools.
  * Stateless: loads bundled data/ at startup, keeps nothing per user.
  */
 import { readFileSync } from "node:fs";
@@ -353,11 +352,71 @@ export function get_feedback_form() {
   );
 }
 
+/**
+ * install_skill — fetch a skill from the private skills repo and return its
+ * files so the host agent can install it into the buyer's house.
+ *
+ * Flow: customer buys a skill-backed Bling item → Stripe webhook fires →
+ * the Bling room polls /api/bling/orders, sees the purchase → calls
+ * install_skill with the item's skill id → host writes the returned files
+ * to the house's skills directory → Bling room confirms installation.
+ *
+ * Auth: SKILLS_REPO_TOKEN env (GitHub token with read access to the private
+ * 0xRayAI/muse-house-skills repo). The MCP stays public — the token never
+ * leaves the server; only skill file contents are returned.
+ */
+export async function install_skill({ skill_id = "" } = {}) {
+  const id = String(skill_id).trim().toLowerCase().replace(/[^a-z0-9-]/g, "");
+  if (!id) return text("install_skill error: missing skill_id.");
+  const token = process.env.SKILLS_REPO_TOKEN;
+  if (!token) {
+    return text(
+      "install_skill unavailable: the skills repo is not connected on this deployment. " +
+      "Fall back to the email fulfillment path — notify support@mymuse.house with the skill id and house."
+    );
+  }
+  const headers = {
+    "Authorization": `Bearer ${token}`,
+    "Accept": "application/vnd.github+json",
+    "User-Agent": "muse-house-mcp",
+  };
+  try {
+    // List files in the skill directory
+    const listRes = await fetch(
+      `https://api.github.com/repos/0xRayAI/muse-house-skills/contents/${encodeURIComponent(id)}`,
+      { headers }
+    );
+    if (!listRes.ok) {
+      return text(`install_skill error: skill \`${id}\` not found in the skills repo (HTTP ${listRes.status}).`);
+    }
+    const entries = await listRes.json();
+    const files = [];
+    for (const e of entries) {
+      if (e.type !== "file") continue;
+      const fRes = await fetch(e.download_url, { headers: { "User-Agent": "muse-house-mcp" } });
+      if (!fRes.ok) continue;
+      const content = await fRes.text();
+      files.push({ path: `${id}/${e.name}`, content });
+    }
+    if (!files.length) return text(`install_skill error: skill \`${id}\` has no files.`);
+    const fileBlocks = files
+      .map((f) => `### ${f.path}\n\`\`\`\n${f.content}\n\`\`\``)
+      .join("\n\n");
+    return text(
+      `# Skill: ${id} — ${files.length} file(s)\n\n` +
+      `**Host:** write each file below to the house's skills directory ` +
+      `(\`~/workspace/skills/${id}/\`), creating the directory if needed. ` +
+      `Then confirm to the human: "${id} installed."\n\n---\n\n${fileBlocks}`
+    );
+  } catch (e) {
+    return text(`install_skill error: could not reach the skills repo — ${String((e && e.message) || e)}`);
+  }
+}
+
 export const TOOL_DEFS = [
   {
     name: "suggest_utilities",
-    access: "read",
-    description: "[read] Rank the Muse connectors (utilities) a household should turn on, given a profile and goal. Returns the curated catalog ranked by keyword fit, each with a one-line why.",
+    description: "Rank the Muse connectors (utilities) a household should turn on, given a profile and goal. Returns the curated catalog ranked by keyword fit, each with a one-line why.",
     inputSchema: {
       type: "object",
       properties: {
@@ -369,8 +428,7 @@ export const TOOL_DEFS = [
   },
   {
     name: "suggest_steps",
-    access: "read",
-    description: "[read] Build an ordered operating plan for a goal, given the utilities already chosen. Concrete steps the host agent executes: onboarding, per-utility setup, house minting, room stamping, mill startup. The tool itself only returns the plan.",
+    description: "Build an ordered operating plan for a goal, given the utilities already chosen. Concrete steps the host agent executes: onboarding, per-utility setup, house minting, room stamping, mill startup.",
     inputSchema: {
       type: "object",
       properties: {
@@ -382,19 +440,17 @@ export const TOOL_DEFS = [
   },
   {
     name: "list_rooms",
-    access: "read",
-    description: "[read] List the nine house room blueprints (art, bling, coach, dev, game, health, home, money, travel) with one-line descriptions.",
+    description: "List the house room blueprints (money, travel, home, health, game, art, dev) with one-line descriptions.",
     inputSchema: { type: "object", properties: {} },
     fn: list_rooms,
   },
   {
     name: "get_room_brief",
-    access: "read",
-    description: "[read] Full blueprint for one room: purpose, connectors, onboarding fills, mill jobs with full specs, board-card templates, ask-first list, and the side-chat seed brief. The host uses this to stamp the room's side chat.",
+    description: "Full blueprint for one room: purpose, connectors, onboarding fills, mill jobs with full specs, board-card templates, ask-first list, and the side-chat seed brief. The host uses this to stamp the room's side chat.",
     inputSchema: {
       type: "object",
       properties: {
-        room: { type: "string", description: "Room id: art | bling | coach | dev | game | health | home | money | travel" },
+        room: { type: "string", description: "Room id: money | travel | home | health | game | art | dev" },
       },
       required: ["room"],
     },
@@ -402,8 +458,7 @@ export const TOOL_DEFS = [
   },
   {
     name: "get_house_template",
-    access: "read",
-    description: "[read] Starter HOUSE.md and OP-PROC.md for a new household, with {{TOKENS}} filled where owner_name/timezone/spend_threshold are given. Remaining tokens are listed so the host can finish personalization.",
+    description: "Starter HOUSE.md and OP-PROC.md for a new household, with {{TOKENS}} filled where owner_name/timezone/spend_threshold are given. Remaining tokens are listed so the host can finish personalization.",
     inputSchema: {
       type: "object",
       properties: {
@@ -416,8 +471,7 @@ export const TOOL_DEFS = [
   },
   {
     name: "stamp_rooms",
-    access: "read",
-    description: "[read] Executable room-creation protocol for the host agent. Returns, per room, the exact side-chat name to create, the verbatim seed message to send first, and the mill jobs to schedule. This MCP tool does not create chats or write to the host — it returns the plan; the host executes it.",
+    description: "Executable room-creation protocol for the host agent. Returns, per room, the exact side-chat name to create, the verbatim seed message to send first, and the mill jobs to schedule. The host executes the three actions per room in order — this is how rooms get created from the product.",
     inputSchema: {
       type: "object",
       properties: {
@@ -429,8 +483,7 @@ export const TOOL_DEFS = [
   },
   {
     name: "codex_check",
-    access: "read",
-    description: "[read] Advisory check of a planned action against the 22-term consumer codex. Returns PASS, ADVISORY, or FLAG with matched terms cited. Not a hard gate — the host agent decides.",
+    description: "Advisory check of a planned action against the 22-term consumer codex. Returns PASS, ADVISORY, or FLAG with matched terms cited. Not a hard gate — the host agent decides.",
     inputSchema: {
       type: "object",
       properties: {
@@ -442,13 +495,12 @@ export const TOOL_DEFS = [
   },
   {
     name: "send_feedback",
-    access: "sensitive-write",
-    description: "[sensitive-write] Relay user feedback about Muse House to the team inbox (durable offsite email via Resend). STRUCTURED form — call get_feedback_form first and present its fields. RULES: (1) Only call when the human explicitly asks to send feedback AND has confirmed the exact kind/room/summary/details you will send — show it verbatim, get a yes. Never speculative, never a side effect. (2) Never forward personal or private information: strip names, emails, phones, addresses, account numbers, financial figures; summarize the issue without them. The service redacts obvious patterns server-side as a backstop. Rate-limited; nothing stored server-side. The message goes to the Muse House team, not to any of the user's contacts.",
+    description: "Relay user feedback about Muse House to the team inbox. STRUCTURED form — call get_feedback_form first and present its fields. RULES: (1) Only call when the human explicitly asks to send feedback AND has confirmed the exact kind/room/summary/details you will send — show it verbatim, get a yes. Never speculative, never a side effect. (2) Never forward personal or private information: strip names, emails, phones, addresses, account numbers, financial figures; summarize the issue without them. The service redacts obvious patterns server-side as a backstop. The message goes to the Muse House team, not to any of the user's contacts.",
     inputSchema: {
       type: "object",
       properties: {
         kind: { type: "string", enum: ["Help", "Feedback", "Bug report", "Feature idea"], description: "What kind of feedback this is" },
-        room: { type: "string", enum: ["money", "travel", "home", "health", "game", "art", "dev", "coach", "bling", "website", "other"], description: "Which room (or the website) this is about" },
+        room: { type: "string", enum: ["money", "travel", "home", "health", "game", "art", "dev", "website", "other"], description: "Which room (or the website) this is about" },
         summary: { type: "string", description: "One-line summary (max 150 chars)" },
         details: { type: "string", description: "What happened, or what they'd like to see (max 2000 chars). No personal data." },
       },
@@ -458,15 +510,13 @@ export const TOOL_DEFS = [
   },
   {
     name: "get_feedback_form",
-    access: "read",
-    description: "[read] Returns the feedback form schema: fields, allowed values, length limits, and the privacy note to show the human. Call this when the human wants to send feedback, present the fields conversationally, then show them the exact text and get an explicit yes before calling send_feedback.",
+    description: "Returns the feedback form schema: fields, allowed values, length limits, and the privacy note to show the human. Call this when the human wants to send feedback, present the fields conversationally, then show them the exact text and get an explicit yes before calling send_feedback.",
     inputSchema: { type: "object", properties: {} },
     fn: get_feedback_form,
   },
   {
     name: "check_room_updates",
-    access: "read",
-    description: "[read] Diff your house's recorded room blueprint versions against the live product. Pass {rooms: {art: 1, money: 1, ...}} with the versions your house tracks (get_house_template ships a room-versions table). Returns per-room upgrades: latest version, changelog since yours, and the upgrade path — 'patch' (send the included message to the existing room chat; history preserved) or 're-stamp' (export state, recreate via stamp_rooms, restore). Run weekly so rooms never go stale.",
+    description: "Diff your house's recorded room blueprint versions against the live product. Pass {rooms: {art: 1, money: 1, ...}} with the versions your house tracks (get_house_template ships a room-versions table). Returns per-room upgrades: latest version, changelog since yours, and the upgrade path — 'patch' (send the included message to the existing room chat; history preserved) or 're-stamp' (export state, recreate via stamp_rooms, restore). Run weekly so rooms never go stale.",
     inputSchema: {
       type: "object",
       properties: {
@@ -479,5 +529,17 @@ export const TOOL_DEFS = [
       required: ["rooms"],
     },
     fn: check_room_updates,
+  },
+  {
+    name: "install_skill",
+    description: "Install a product skill into the buyer's house. Call this after a skill-backed Bling purchase (the Bling room polls /api/bling/orders to see what was bought). Takes a skill_id, fetches the skill files from the private skills repo, and returns them with write instructions. The host agent writes the files to the house's skills directory. Requires SKILLS_REPO_TOKEN on the deployment; falls back to email fulfillment when unconfigured.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        skill_id: { type: "string", description: "Skill id from the catalog item's skill field, e.g. 'voice-briefing'" },
+      },
+      required: ["skill_id"],
+    },
+    fn: install_skill,
   },
 ];

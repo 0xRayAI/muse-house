@@ -11,6 +11,11 @@
  *   STRIPE_WEBHOOK_SECRET — required for webhook verification.
  *   BLING_TO              — fulfillment inbox (default support@mymuse.house).
  *   SITE_URL              — public base URL (default https://mymuse.house).
+ *   SKILLS_REPO_TOKEN     — GitHub token with read access to the private
+ *                           0xRayAI/muse-house-skills repo. Used by the
+ *                           install_skill MCP tool to fetch skill files on
+ *                           purchase. Without it, skill-backed items fall back
+ *                           to the email fulfillment path.
  *
  * Without STRIPE_SECRET_KEY every checkout attempt returns
  * { error: "payments_not_configured" } — the shop shows "coming soon"
@@ -88,7 +93,7 @@ export async function handleBlingCheckout(body) {
   }
 }
 
-async function notifyFulfillment({ itemName, amountTotal, currency, customerEmail, sessionId, house, deliverable }) {
+async function notifyFulfillment({ itemName, amountTotal, currency, customerEmail, sessionId, house, deliverable, skill }) {
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) {
     console.error("bling: RESEND_API_KEY missing — cannot notify fulfillment");
@@ -100,6 +105,9 @@ async function notifyFulfillment({ itemName, amountTotal, currency, customerEmai
   const deliverLine = deliverable
     ? `\nDeliver it here: ${SITE_URL}${deliverable}\n`
     : `\nMade-to-order: reply to the customer email to arrange delivery.\n`;
+  const skillLine = skill
+    ? `\nSkill: ${skill} — the buyer's Bling room should call the install_skill MCP tool with skill_id="${skill}" to deploy it.\n`
+    : "";
   try {
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -114,7 +122,7 @@ async function notifyFulfillment({ itemName, amountTotal, currency, customerEmai
           `House: ${house || "(no house tag given)"}\n` +
           `Amount: $${amount} ${String(currency || "usd").toUpperCase()}\n` +
           `Customer email: ${customerEmail || "(not provided)"}\n` +
-          `Stripe session: ${sessionId}\n` + deliverLine +
+          `Stripe session: ${sessionId}\n` + deliverLine + skillLine +
           `\n—\nSent via Muse House Bling`,
       }),
     });
@@ -147,20 +155,26 @@ export async function handleBlingOrders(searchParams) {
   if (!stripe) return json(503, { error: "payments_not_configured" });
   try {
     const sessions = await stripe.checkout.sessions.list({ limit: 25 });
+    const catalog = getCatalog();
     const orders = sessions.data
       .filter((s) => s.payment_status === "paid" || s.status === "complete")
-      .map((s) => ({
-        session_id: s.id,
-        item_id: (s.metadata || {}).bling_item_id || null,
-        item_name: (s.metadata || {}).bling_item_name || null,
-        house: (s.metadata || {}).bling_house && (s.metadata || {}).bling_house !== "(untagged)"
-          ? s.metadata.bling_house
-          : null,
-        amount_cents: s.amount_total,
-        currency: s.currency,
-        email: (s.customer_details || {}).email || null,
-        created: s.created,
-      }))
+      .map((s) => {
+        const itemId = (s.metadata || {}).bling_item_id || null;
+        const item = (catalog.items || []).find((i) => i.id === itemId);
+        return {
+          session_id: s.id,
+          item_id: itemId,
+          item_name: (s.metadata || {}).bling_item_name || null,
+          skill: (item && item.skill) || null,
+          house: (s.metadata || {}).bling_house && (s.metadata || {}).bling_house !== "(untagged)"
+            ? s.metadata.bling_house
+            : null,
+          amount_cents: s.amount_total,
+          currency: s.currency,
+          email: (s.customer_details || {}).email || null,
+          created: s.created,
+        };
+      })
       .sort((a, b) => b.created - a.created);
     return json(200, { orders });
   } catch (e) {
@@ -244,6 +258,7 @@ export async function handleBlingWebhook(rawBody, signature) {
       sessionId: s.id,
       house: meta.bling_house && meta.bling_house !== "(untagged)" ? meta.bling_house : "",
       deliverable: item && item.deliverable ? item.deliverable : "",
+      skill: item && item.skill ? item.skill : "",
     });
   }
   return json(200, { received: true });
