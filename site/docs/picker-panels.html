@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Picker Panels — How Selectors Work</title>
+<style>
+  * { box-sizing: border-box; margin: 0; }
+  body { background: #101014; color: #f5f7fa; font-family: system-ui, sans-serif; line-height: 1.65; padding: 48px 20px 60px; }
+  .wrap { max-width: 680px; margin: 0 auto; }
+  h1 { font-size: 1.8rem; margin-bottom: 8px; }
+  h2 { font-size: 1.25rem; margin: 32px 0 12px; color: #7dd3fc; }
+  h3 { font-size: 1.05rem; margin: 20px 0 8px; }
+  p, li { color: #d4d4d8; margin-bottom: 10px; }
+  ul { padding-left: 22px; }
+  code { background: #1e1e26; padding: 2px 7px; border-radius: 6px; font-size: .88em; color: #fbbf24; }
+  pre { background: #1e1e26; border: 1px solid #2a2a35; border-radius: 12px; padding: 16px 18px; overflow-x: auto; margin: 12px 0 16px; font-size: .85rem; line-height: 1.55; }
+  pre code { background: none; padding: 0; color: #e4e4e7; }
+  table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: .9rem; }
+  th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid #2a2a35; }
+  th { color: #8a8fa3; font-weight: 600; font-size: .8rem; text-transform: uppercase; }
+  td { color: #d4d4d8; }
+  .yes { color: #4ade80; } .no { color: #f87171; }
+  a { color: #7dd3fc; }
+  .note { background: #1e1e26; border-left: 3px solid #7dd3fc; padding: 12px 16px; border-radius: 0 10px 10px 0; margin: 16px 0; font-size: .92rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Picker Panels</h1>
+  <p>How selectors work in Muse House rooms — for builders.</p>
+
+  <h2>The Two Pieces</h2>
+  <p>Every selector has two parts:</p>
+  <ul>
+    <li><strong>Browser panel</strong> (HTML widget) — rich visual cards for looking at options. Display-only; taps don't trigger actions.</li>
+    <li><strong>Selector buttons</strong> — plain text buttons that actually work. One tap applies the choice.</li>
+  </ul>
+
+  <h2>Building a Selector</h2>
+
+  <h3>Step 1: Define the options</h3>
+  <p>Each option needs a name, a short descriptor, and the value to apply.</p>
+  <pre><code>packs = {
+    "house-original": {"Bling": "✨", "Money": "💸", ...},
+    "neon-nights":    {"Bling": "💠", "Money": "🤑", ...},
+}</code></pre>
+
+  <h3>Step 2: Create the buttons</h3>
+  <pre><code>muse.create_options(options=[
+    "✨ House Original — the classic 9",
+    "💠 Neon Nights — neon-tube energy",
+    "🪩 Midnight Diner — coffee at 2am"
+])</code></pre>
+  <div class="note"><strong>Rules:</strong> single line only (no <code>\n</code>, no <code>&lt;br&gt;</code>); no bold or formatting; emojis work — put the signature emoji first; keep it short.</div>
+
+  <h3>Step 3: Handle the tap</h3>
+  <p>When the user taps, the button text arrives as their message. Parse the name, apply the change:</p>
+  <pre><code># "💠 Neon Nights — neon-tube energy" arrives
+pack = match_pack(user_message)  # → "neon-nights"
+rename_all_rooms(pack.emojis)    # chat.rename × 9</code></pre>
+
+  <h3>Step 4 (optional): Browser panel</h3>
+  <p>For a richer preview, build an HTML widget with cards. Use theme CSS variables (<code>--hatch-widget-text</code>, <code>--hatch-widget-surface</code>, etc.). Taps update visual state only — they cannot trigger agent actions.</p>
+
+  <h2>What Works</h2>
+  <table>
+    <tr><th>What</th><th>How</th><th>Status</th></tr>
+    <tr><td>Tap → action</td><td><code>muse.create_options</code></td><td class="yes">✅ Works</td></tr>
+    <tr><td>Rich cards</td><td>HTML widget</td><td class="yes">✅ Display only</td></tr>
+    <tr><td>Tap → action</td><td>List widget <code>send_message</code></td><td class="no">❌ Taps don't register on Android</td></tr>
+    <tr><td>Line breaks in buttons</td><td><code>\n</code>, <code>\r\n</code>, U+2028/9</td><td class="no">❌ All render as single line</td></tr>
+    <tr><td>Bold in buttons</td><td>Markdown / HTML</td><td class="no">❌ Plain text only</td></tr>
+  </table>
+
+  <p style="margin-top:32px;"><a href="/">← Back to Muse House</a></p>
+</div>
+</body>
+</html>
