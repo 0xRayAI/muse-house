@@ -62,11 +62,11 @@ test("voice pack changes the morning briefing prompt", () => {
   assert.equal(owned.briefing.voice_id, "newscaster");
   assert.match(owned.briefing.prompt, /Voice for this briefing \(Newscaster\)/);
   assert.notEqual(owned.briefing.prompt, prompt);
-  const picked = applyBling({ rooms, briefingPrompt: prompt, owned: BLING.voice, voiceId: "deadpan", now: during });
-  assert.equal(picked.briefing.voice_id, "deadpan");
-  const brief = getRoomBrief("bling", { owned: BLING.voice, voice: "poet" });
+  const picked = applyBling({ rooms, briefingPrompt: prompt, owned: BLING.voice, voiceId: "bold", now: during });
+  assert.equal(picked.briefing.voice_id, "bold");
+  const brief = getRoomBrief("bling", { owned: BLING.voice, voice: "warm" });
   const spec = brief.millSpecs.find((m) => m.slug === "morning-briefing");
-  assert.match(spec.sections.prompt_template_for_the_cron_job_, /Voice for this briefing \(Poet\)/);
+  assert.match(spec.sections.prompt_template_for_the_cron_job_, /Voice for this briefing \(Warm\)/);
   const untouched = mill["morning-briefing"].sections.prompt_template_for_the_cron_job_;
   assert.equal(untouched, prompt);
 });

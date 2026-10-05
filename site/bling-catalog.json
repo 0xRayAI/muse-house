@@ -43,7 +43,7 @@
     },
     {
       "deliverable": "/bling/delights/voice-pack/",
-      "description": "Six briefing voices already in the pack: Drill Sergeant, Bedtime Story, Newscaster, Poet, Cornerman, Deadpan. Owning it sets the morning-briefing prompt to one of those instructions (Newscaster unless you pick another). This service does not edit a cron on your host.",
+      "description": "Six briefing voices already in the pack: Newscaster, Warm, Bright, Calm, Bold, Gentle. Owning it sets the morning-briefing prompt to one of those instructions (Newscaster unless you pick another). This service does not edit a cron on your host.",
       "id": "briefing-voice-pack",
       "kind": "gizmo",
       "name": "Voice Pack",
