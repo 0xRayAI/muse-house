@@ -17,16 +17,22 @@ consumer-codex checks.
 - **Advisory governance.** `codex_check` cites the 22-term consumer codex and
   returns PASS / ADVISORY / FLAG. It is not a gate; the host agent decides.
 
-## Tools
+## Tools (10) · Rooms (9)
 
-| Tool | Input | What it returns |
-|------|-------|-----------------|
-| `suggest_utilities` | profile, goal | Ranked Muse connectors (utilities) to turn on, each with a one-line why. Catalog: `data/utilities-catalog.json` (editable). |
-| `suggest_steps` | goal, utilities[] | Ordered operating plan the host executes: onboarding → utility setup → house mint → room stamping → mill startup. |
-| `list_rooms` | — | The 4 room blueprints (money, travel, home, health) with one-line descriptions. |
-| `get_room_brief` | room | Full blueprint: purpose, connectors, onboarding fills, mill jobs + full mill specs, board-card templates, ask-first list, side-chat seed brief. |
-| `get_house_template` | owner_name?, timezone? | Starter `HOUSE.md` + `OP-PROC.md` with `{{TOKENS}}` filled where given; remaining tokens listed. |
-| `codex_check` | action | PASS / ADVISORY / FLAG against the consumer codex, matched terms cited. Advisory only. |
+Access: **read** | **write** | **sensitive-write**. Nine rooms in `data/rooms.json`: art, bling, coach, dev, game, health, home, money, travel.
+
+| Tool | Access | Input | What it returns |
+|------|--------|-------|-----------------|
+| `suggest_utilities` | read | profile, goal | Ranked Muse connectors (utilities) to turn on, each with a one-line why. Catalog: `data/utilities-catalog.json`. |
+| `suggest_steps` | read | goal, utilities[] | Ordered operating plan the host executes. The tool only returns the plan. |
+| `list_rooms` | read | — | The nine room blueprints with one-line descriptions. |
+| `get_room_brief` | read | room | Full blueprint: purpose, connectors, onboarding fills, mill jobs + specs, board-card templates, ask-first list, side-chat seed brief. |
+| `get_house_template` | read | owner_name?, timezone? | Starter `HOUSE.md` + `OP-PROC.md` with `{{TOKENS}}` filled where given; remaining tokens listed. |
+| `stamp_rooms` | read | rooms?, owner_name? | Executable room-creation protocol for the host. Returns the plan; does not create chats itself. |
+| `codex_check` | read | action | PASS / ADVISORY / FLAG against the consumer codex. Advisory only — not a gate. |
+| `send_feedback` | sensitive-write | kind, room, summary, details | Relays user-confirmed feedback to the team inbox (durable offsite email). Rate-limited; nothing stored. |
+| `get_feedback_form` | read | — | Feedback form schema for consistent host presentation. |
+| `check_room_updates` | read | rooms{} | Diff recorded room versions vs live blueprints; patch or re-stamp path. |
 
 ## Run locally
 
@@ -58,12 +64,20 @@ PII audit fails the build if anything leaks.
 4. Note the public URL Railway assigns — that is the connector's MCP endpoint
    (`POST https://<app>.up.railway.app/mcp`).
 
+## Auth (honesty)
+
+- **Public blueprint MCP tier:** no key. Blueprints need no login or connector OAuth.
+- **Website/API tokens only (not MCP):**
+  - `GET /api/bling/orders` requires `BLING_API_TOKEN`
+  - `POST /api/bling/dev/grant` requires `BLING_DEV_TOKEN`
+
+## Bling money posture
+
+Bling is the website shop (`/bling.html`) using **Stripe Checkout only**. Cards
+stay on Stripe. Bling is **not** an MCP money-movement tool — no transfers,
+trades, or payments via MCP. No Meta money tools.
+
 ## Future work
 
-- **Auth.** v0 is public, read-only blueprints — nothing sensitive to protect.
-  When the foundry grows write-adjacent tools, add bearer auth and per-key
-  rate limits.
-- **Paid tiers.** The 0xray shop model (x402 pay endpoints) fits here when a
-  tool costs something to run.
 - **More rooms.** Room blueprints are data (`data/rooms.json` via
   `scripts/build-data.mjs`) — add rooms without touching the server.

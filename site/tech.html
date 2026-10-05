@@ -31,12 +31,14 @@
 
   <h2>The endpoint</h2>
   <p><code>POST https://mymuse.house/mcp</code> · <code>GET https://mymuse.house/health</code></p>
-  <p>No authentication on the public blueprint tier. No accounts, no API keys, no login walls.</p>
+  <p>No authentication on the public blueprint MCP tier. No accounts, no login walls for blueprints. Token-protected website routes only: <code>GET /api/bling/orders</code> (<code>BLING_API_TOKEN</code>) and <code>POST /api/bling/dev/grant</code> (<code>BLING_DEV_TOKEN</code>). No connector OAuth is invented for blueprints.</p>
 
-  <h2>Ten tools</h2>
-  <p><strong>Blueprints:</strong> <code>suggest_utilities</code> ranks which Muse connectors a household should turn on. <code>suggest_steps</code> builds the operating plan. <code>list_rooms</code> and <code>get_room_brief</code> serve the nine room blueprints. <code>get_house_template</code> mints starter HOUSE.md / OP-PROC.md. <code>stamp_rooms</code> returns the executable room-creation protocol the host agent follows. <code>check_room_updates</code> compares a house's recorded room versions against the live blueprints and returns patch-or-restamp guidance.</p>
-  <p><strong>Governance:</strong> <code>codex_check</code> runs a planned action against the 22-term consumer codex — advisory, not a gate.</p>
-  <p><strong>Feedback:</strong> <code>send_feedback</code> relays structured, user-confirmed feedback to the team inbox (personal data redacted server-side); <code>get_feedback_form</code> serves the form schema so hosts present it consistently.</p>
+  <h2>Ten tools · nine rooms</h2>
+  <p>Rooms in <code>data/rooms.json</code>: Art, Bling, Coach, Dev, Game, Health, Home, Money, Travel.</p>
+  <p><strong>Blueprints [read]:</strong> <code>suggest_utilities</code> ranks which Muse connectors a household should turn on. <code>suggest_steps</code> builds the operating plan (returns the plan only). <code>list_rooms</code> and <code>get_room_brief</code> serve the nine room blueprints. <code>get_house_template</code> mints starter HOUSE.md / OP-PROC.md. <code>stamp_rooms</code> returns the executable room-creation protocol — the MCP tool does not create chats; the host executes. <code>check_room_updates</code> compares a house's recorded room versions against the live blueprints and returns patch-or-restamp guidance.</p>
+  <p><strong>Governance [read]:</strong> <code>codex_check</code> runs a planned action against the 22-term consumer codex — advisory, not a gate.</p>
+  <p><strong>Feedback:</strong> <code>get_feedback_form</code> [read] serves the form schema; <code>send_feedback</code> [sensitive-write] relays structured, user-confirmed feedback to the team inbox via durable offsite email (personal data redacted server-side; rate-limited; nothing stored).</p>
+  <p><strong>Bling money posture:</strong> purchases are website Stripe Checkout only (<a href="/bling.html">/bling.html</a>). Cards stay on Stripe. Bling is not an MCP money-movement tool — no transfers, trades, or payments via MCP. No Meta money tools.</p>
 
   <h2>Stateless means stateless</h2>
   <p>The service stores nothing: no user data, no conversation history, no identifiers. Tool arguments are not persisted. Your board, routines, approvals, and connected accounts live inside your own Muse — never here. Feedback messages are forwarded to the support inbox and forgotten; only anonymous rate-limit counters exist, in memory, never on disk. <a href="/privacy.html">The privacy policy</a> says the same thing at greater length.</p>
@@ -45,7 +47,7 @@
   <p>The whole thing is public: <a href="https://github.com/0xRayAI/muse-house" target="_blank" rel="noopener">0xRayAI/muse-house</a> (MIT). Run it yourself with <code>node src/server.mjs</code> — the Dockerfile is in the repo. Machine-readable docs live at <a href="/llms.txt">llms.txt</a>.</p>
 
   <h2>Status</h2>
-  <p>Submitted to the Muse Connector Directory; in review. Until then, add it as a custom connector — <a href="/#start">the homepage walks through it</a>.</p>
+  <p><strong>Directory status: draft / not submitted.</strong> Listing copy lives in the repo for preparation; there is no completed directory submission on record here. Add it as a custom connector today — <a href="/#start">the homepage walks through it</a>.</p>
 </main>
 <footer>
   <p><img class="brand-mark" src="/icon.svg" alt="Muse House" width="26" height="26"> Muse House · by 0xRayAI · <a href="https://github.com/0xRayAI/muse-house" target="_blank" rel="noopener">GitHub</a> · <a href="/help.html">Help</a> · <a href="/tech.html">Tech</a> · <a href="/privacy.html">Privacy</a> · <a href="/terms.html">Terms</a></p>

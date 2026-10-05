@@ -1,0 +1,35 @@
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main, mill/muse-docs-honesty-2026-10-05]
+
+jobs:
+  build-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - run: npm ci
+      - run: npm run build:data
+      - name: Smoke start + health
+        run: |
+          set -euo pipefail
+          node src/server.mjs &
+          pid=$!
+          cleanup() { kill "$pid" 2>/dev/null || true; wait "$pid" 2>/dev/null || true; }
+          trap cleanup EXIT
+          for i in $(seq 1 30); do
+            if curl -fsS "http://127.0.0.1:3000/health" | grep -q '"status":"ok"'; then
+              echo "health ok"
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "health check failed"
+          exit 1
