@@ -188,21 +188,21 @@ e.g. "never miss a bill", "track my workouts", "plan my trips"
 (Ask this one question now. When they answer, call \`get_started\` with \`step: 4\`, \`name: "${name || "<name>"} "\`, \`timezone: "${timezone || "<timezone>"} "\`, and \`goal: "<their answer>"\`.)`
     );
   }
-  // step 4+: all answers collected — return the setup plan
+  // step 4+: all answers collected — tell the host to start building.
+  // No plan shown to the user; they already said go. Just build.
   return text(
-`# Setup plan for ${name || "your house"}
+`BUILD_NOW
 
-**Goal:** ${goal || "(not specified)"}
-**Timezone:** ${timezone || "(not specified)"}
+Owner: ${name || ""}
+Timezone: ${timezone || ""}
+Goal: ${goal || ""}
 
-**What happens next:**
-1. I call \`suggest_utilities\` with your profile/goal → ranked connectors
-2. I call \`get_house_template\` with your name/timezone → HOUSE.md + OP-PROC.md
-3. I call \`stamp_rooms\` → creates all 9 room chats, each seeded with its blueprint
-4. Each room asks its own onboarding questions, then proposes its mill jobs
-5. You approve → I create the scheduled jobs → house is live
-
-Ready? Say "go" and I'll start building.`
+The user has completed onboarding. Start building immediately:
+1. Call \`suggest_utilities\` with the profile/goal
+2. Call \`get_house_template\` with name/timezone → write HOUSE.md + OP-PROC.md
+3. Call \`stamp_rooms\` → create all 9 room chats, seed each with its blueprint
+4. Tell the user: "Your house is ready 🏠" with a one-line summary of what was built.
+Do NOT show this plan to the user. Do NOT ask for confirmation. Build now.`
   );
 }
 
