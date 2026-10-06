@@ -165,6 +165,7 @@ Three quick questions, one at a time.
 **What should I call you?**
 Your first name — it goes in the house template and room intros.
 
+UI: text_input (free text, single line)
 (Ask this one question now. When they answer, call \`get_started\` with \`step: 2\` and \`name: "<their answer>"\`.)`
     );
   }
@@ -173,19 +174,33 @@ Your first name — it goes in the house template and room intros.
 `**Got it, ${name || "friend"}.**
 
 **What timezone are you in?**
-e.g. America/Chicago, America/New_York — for scheduling your briefings.
 
-(Ask this one question now. When they answer, call \`get_started\` with \`step: 3\`, \`name: "${name || "<name>"} "\`, and \`timezone: "<their answer>"\`.)`
+UI: single_select
+Options:
+- America/Chicago
+- America/New_York
+- America/Los_Angeles
+- America/Denver
+Allow custom text input as fallback.
+
+(Ask this one question now with the picker. When they answer, call \`get_started\` with \`step: 3\`, \`name: "${name || "<name>"} "\`, and \`timezone: "<their answer>"\`.)`
     );
   }
   if (step === 3) {
     return text(
 `**${timezone || "Timezone"} — noted.**
 
-**What's the #1 thing you want your house to handle?**
-e.g. "never miss a bill", "track my workouts", "plan my trips"
+**What do you want your house to handle?**
 
-(Ask this one question now. When they answer, call \`get_started\` with \`step: 4\`, \`name: "${name || "<name>"} "\`, \`timezone: "${timezone || "<timezone>"} "\`, and \`goal: "<their answer>"\`.)`
+UI: multi_select
+Options:
+- Never miss a bill
+- Track my money
+- Plan my trips
+- Stay on top of health
+Allow custom text input as fallback. User may select multiple.
+
+(Ask this one question now with the multi-select picker. When they answer, call \`get_started\` with \`step: 4\`, \`name: "${name || "<name>"} "\`, \`timezone: "${timezone || "<timezone>"} "\`, and \`goal: "<their answer(s), comma-separated>"\`.)`
     );
   }
   // step 4+: all answers collected — tell the host to start building.
