@@ -201,7 +201,21 @@ export async function handleBlingOrders(searchParams) {
         };
       })
       .sort((a, b) => b.created - a.created);
-    return json(200, { orders });
+    // Merge dev grants into the order feed so the Bling room sees them
+    const devOrders = devGrants.map((g) => ({
+      session_id: g.session_id,
+      item_id: g.item_id,
+      item_name: g.item_name,
+      skill: (getCatalog().items || []).find((i) => i.id === g.item_id)?.skill || null,
+      house: g.house || null,
+      amount_cents: 0,
+      currency: "usd",
+      email: g.email || null,
+      created: Math.floor(new Date(g.granted_at).getTime() / 1000),
+      dev_grant: true,
+    }));
+    const allOrders = [...orders, ...devOrders].sort((a, b) => b.created - a.created);
+    return json(200, { orders: allOrders });
   } catch (e) {
     console.error("bling: orders list failed:", String((e && e.message) || e));
     return json(502, { error: "orders_failed" });
