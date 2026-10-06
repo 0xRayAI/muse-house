@@ -191,7 +191,7 @@
   }
   const localOwned = JSON.parse(localStorage.getItem("museBlingOwned") || "[]");
   const ownedSet = new Set([...serverOwned, ...localOwned]);
-  const groups = [["trinket", "✨ Trinkets"], ["gizmo", "🔧 Gizmos"], ["delight", "🎁 Delights"]];
+  const groups = [["gizmo", "🔧 Gizmos"], ["trinket", "✨ Trinkets"], ["delight", "🎁 Delights"]];
   box.innerHTML = "";
   for (const [kind, label] of groups) {
     const items = (catalog.items || []).filter((i) => i.kind === kind);
