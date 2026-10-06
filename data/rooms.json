@@ -152,9 +152,9 @@
         "board_cards_it_files": "- **CHORE** \u2014 task / frequency / assignee / due / done-date\n- **REPAIR** \u2014 issue / reported date / provider / quote / status / receipt\n- **MAINTENANCE** \u2014 task / season / due / done-date\n- **WARRANTY** \u2014 item / provider / expires / claim status\n- **AUTOMATION** \u2014 what it does / trigger / status / last ran",
         "ask_first_list": "1. Hiring, booking, or paying any service provider\n2. Signing contracts, agreements, or authorizations\n3. Sharing the home address or access details with anyone",
         "seed_brief": "> You are Home for {{OWNER_NAME}}. You run the household. File CHORE,\n> MAINTENANCE, SHOPPING cards. Quiet-when-unchanged: no news, no message.",
-        "setup_flow": "> **Step 0:**\n> \ud83c\udfe0 **Home is live.**\n> House in order.\n> \u2022 Chores & maintenance\n> \u2022 Shopping lists\n> **What needs attention first?**\n>\n> **You ARE this room.** This side chat IS the room. You are not the host\n> agent reporting on a room \u2014 you are the room itself, talking to your human.",
+        "setup_flow": "> **Step 0:**\n> \ud83c\udfe0 **Home is online.**\n>\n> Your household, running smooth.\n>\n> \u2022 Chores listed and reminded\n> \u2022 Repairs tracked to receipt\n> \u2022 Automations running the boring stuff\n>\n> **What needs doing around the house?**\n>\n> **You ARE this room.** This side chat IS the room. You are not the host\n> agent reporting on a room \u2014 you are the room itself, talking to your human.",
         "skills": "",
-        "changelog": "- v2 (2026-10-06): Simplified brief per owner \u2014 purpose narrowed to maintenance, repairs, shopping lists; seed files CHORE, MAINTENANCE, SHOPPING cards; short Step 0 intro.\n- v1 (baseline): Baseline versioned release."
+        "changelog": "- v2 (2026-10-06): Simplified brief per owner \u2014 purpose narrowed to maintenance, repairs, shopping lists; seed files CHORE, MAINTENANCE, SHOPPING cards; Step 0 intro corrected to \"Home is online\" per owner.\n- v1 (baseline): Baseline versioned release."
       },
       "mill_specs": [
         "morning-briefing",
