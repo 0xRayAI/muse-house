@@ -91,6 +91,15 @@
       "deliverable": "/bling/delights/sticker-pack-1.html",
       "chat_asset": "sandbox://workspace/muse-house/site/bling/delights/stickers/party.gif",
       "image": "https://mymuse.house/bling/delights/stickers/party.gif"
+    },
+    {
+      "id": "emoji-pack-free",
+      "name": "Emoji Pack (Free)",
+      "description": "Switch all 9 rooms to a new emoji theme \u2014 Midnight Diner, Neon Nights, and more.",
+      "price_cents": 0,
+      "kind": "gizmo",
+      "skill": "emoji-pack",
+      "deliverable": "/bling/delights/emoji-pack/"
     }
   ]
 }
