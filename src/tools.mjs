@@ -183,6 +183,64 @@ No website, no paste-a-prompt. Just answer the 3 questions and we're off.`
   );
 }
 
+// ---------------------------------------------------------------- reset_house
+/** House teardown protocol: returns the executable plan for the host agent
+ * to completely remove a house. The MCP server cannot delete side chats
+ * or crons itself — only the host agent can. This tool returns the
+ * complete, ordered teardown plan. */
+export function reset_house({ owner_name = "", confirm = "" } = {}) {
+  if (confirm !== "DELETE") {
+    return text(
+`# Reset house — confirmation required
+
+This will permanently remove the house for "${owner_name || "{{OWNER_NAME}}"}":
+1. Delete all 9 room side chats (Art, Bling, Coach, Dev, Game, Health, Home, Money, Travel)
+2. Remove all house mill jobs (morning briefing, evening wrap, bill watch, bling order watch, etc.)
+3. Clear the house directory (HOUSE.md, OP-PROC.md, WAVEBOARD.md, selections.json)
+4. Revoke house API tokens (Bling order feed token)
+
+**This is irreversible.** To proceed, call \`reset_house\` again with:
+- \`owner_name\`: "${owner_name || "the owner's name"}"
+- \`confirm\`: "DELETE"`
+    );
+  }
+  return text(
+`# Reset house — executable teardown plan
+
+Owner: ${owner_name}
+
+Execute these host actions in order. Do not skip steps.
+
+## Step 1 — Delete room side chats
+For each of the 9 rooms, call \`chat.delete\` with its chat_id:
+- 🎨 Art, 💎 Bling, 🎯 Coach, 💻 Dev, 🎮 Game, ❤️ Health, 🏠 Home, 👛 Money, ✈️ Travel
+(Find chat_ids via \`chat.list\` — match by name.)
+
+## Step 2 — Remove mill jobs
+Delete these scheduled jobs via \`cron.remove\`:
+- \`muse-house-morning-briefing\` (daily briefing)
+- \`muse-house-evening-wrap\` (evening wrap)
+- \`bling-order-watch\` (Bling purchase watcher)
+- \`budget-bill-tracker-daily\` (if house-owned)
+- \`budget-weekly-bill-check\` (if house-owned)
+- Any other crons with owner \`goal:muse-house-*\`
+
+## Step 3 — Clear house directory
+Remove all files in the house directory (back up first if the human wants it):
+- house/HOUSE.md, house/OP-PROC.md, house/WAVEBOARD.md
+- house/selections.json, house/house-pack.json
+- house/ATTENTION_STATE.md
+
+## Step 4 — Revoke tokens
+- Remove the Bling API token from the house's secure storage
+- The MCP endpoint itself needs no disconnection (public, no auth)
+
+## Step 5 — Confirm
+Reply to the human: "House reset complete. All rooms, jobs, and files removed."
+Do not recreate anything until the human asks.`
+  );
+}
+
 // ---------------------------------------------------------------- stamp_rooms
 // The product's room-creation protocol. An MCP server cannot create side
 // chats itself — only the host agent can. This tool returns the complete,
@@ -459,6 +517,18 @@ export const TOOL_DEFS = [
     description: "First-contact onboarding for a new user. Returns the 3 questions to ask (name, timezone, top goal) and explains the setup flow. The host agent calls this when someone connects without a house.",
     inputSchema: { type: "object", properties: {} },
     fn: get_started,
+  },
+  {
+    name: "reset_house",
+    description: "House teardown protocol. Returns the executable plan for the host agent to completely remove a house: delete room chats, remove mill jobs, clear house files, revoke tokens. Requires confirm='DELETE' — without it, returns a confirmation prompt instead of the plan.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        owner_name: { type: "string", description: "Owner's name, for the confirmation message" },
+        confirm: { type: "string", description: "Must be 'DELETE' to get the executable plan" },
+      },
+    },
+    fn: reset_house,
   },
   {
     name: "suggest_utilities",
