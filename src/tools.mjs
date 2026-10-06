@@ -1,15 +1,11 @@
 /**
- * tools.mjs — the 11 Muse House tools (9 rooms in data/rooms.json).
- * Access: each TOOL_DEFS entry carries access: read | write | sensitive-write.
+ * tools.mjs — the 12 Muse House tools.
  * Stateless: loads bundled data/ at startup, keeps nothing per user.
  */
 import { readFileSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { validateFeedback, normalizeFeedback, sendFeedbackEmail, mcpFeedbackAllowed, getFeedbackForm } from "./feedback.mjs";
-import { decorateRoomBrief } from "./bling-apply.mjs";
-// bling.mjs imports tools.mjs (rooms/mill, #20) — load it lazily in
-// install_skill to keep the module graph acyclic.
 
 const DATA = join(dirname(fileURLToPath(import.meta.url)), "..", "data");
 const load = (f) => JSON.parse(readFileSync(join(DATA, f), "utf8"));
@@ -101,25 +97,21 @@ export function list_rooms() {
 
 // ---------------------------------------------------------------- get_room_brief
 /** Structured room blueprint — shared by the MCP tool and the JSON API. */
-export function getRoomBrief(room = "", opts = {}) {
+export function getRoomBrief(room = "") {
   const r = rooms.find((x) => x.id === room.toLowerCase().trim());
   if (!r) return { error: `Unknown room \`${room}\`.`, available: rooms.map((x) => x.id) };
   const specs = r.mill_specs.map((slug) => mill[slug]).filter(Boolean);
-  return decorateRoomBrief({
+  return {
     id: r.id,
     name: r.name,
     description: r.description,
     sections: r.sections,
     millSpecs: specs,
-  }, {
-    ...opts,
-    rooms,
-    briefingPrompt: (mill["morning-briefing"] && mill["morning-briefing"].sections.prompt_template_for_the_cron_job_) || "",
-  });
+  };
 }
 
-export function get_room_brief({ room = "", owned = "", voice = "", purchased_at = "" } = {}) {
-  const b = getRoomBrief(room, { owned, voice, purchased_at });
+export function get_room_brief({ room = "" }) {
+  const b = getRoomBrief(room);
   if (b.error) {
     return text(`${b.error} Available: ${b.available.map((x) => `\`${x}\``).join(", ")}. Call list_rooms for descriptions.`);
   }
@@ -133,16 +125,8 @@ export function get_room_brief({ room = "", owned = "", voice = "", purchased_at
       return `## Mill spec: ${m.title} (\`${m.slug}\`, ${m.kind})\n${body}`;
     })
     .join("\n\n---\n\n");
-  const a = b.bling_apply;
-  const ownedBits = [];
-  if (a && a.icon && String(a.icon).startsWith("/")) ownedBits.push(`Room icon: ${a.icon}`);
-  if (a && a.diner && a.diner.personality) ownedBits.push(`${a.diner.personality}\nTimer ends: ${a.diner.until} (${a.diner.days_left} days left).`);
-  if (a && a.year_brief) ownedBits.push(`Year in Review for this brief. Not posted to chat.\n${a.year_brief}`);
-  if (a && a.sticker) ownedBits.push(`Sticker: ${a.sticker.src}`);
-  if (a && a.briefing && a.briefing.voice_name) ownedBits.push(`Morning briefing voice: ${a.briefing.voice_name}. The morning-briefing prompt below is the one to schedule.`);
-  const ownedBlock = ownedBits.length ? `\n\n## Owned Bling\n${ownedBits.join("\n\n")}\n` : "";
   return text(
-    `# Room brief: ${r.name}\n\n## Purpose\n${s.purpose}\n\n## Connectors needed\n${s.connectors_needed}\n\n${s.skills ? `## Skills\n${s.skills}\n\n` : ""}## Onboarding fills\n${s.onboarding_fills}\n\n## Mill jobs\n${s.mill_jobs}\n\n## Board cards it files\n${s.board_cards_it_files}\n\n## Ask-first list\n${s.ask_first_list}\n\n## Seed brief (host gives this to the side chat, filling {{OWNER_NAME}})\n${s.seed_brief}\n\n${s.personality ? `## Personality\n${s.personality}\n\n` : ""}${s.setup_flow ? `## Setup flow\n${s.setup_flow}\n\n` : ""}---\n${ownedBlock}\n${specTexts}\n\n---\n\n**How the host stamps this room:** \`chat.create\` (fresh side chat) → paste the seed brief with {{OWNER_NAME}} filled → file the board-cards template → create the cron jobs and sweeps from the mill specs above.`
+    `# Room brief: ${r.name}\n\n## Purpose\n${s.purpose}\n\n## Connectors needed\n${s.connectors_needed}\n\n${s.skills ? `## Skills\n${s.skills}\n\n` : ""}## Onboarding fills\n${s.onboarding_fills}\n\n## Mill jobs\n${s.mill_jobs}\n\n## Board cards it files\n${s.board_cards_it_files}\n\n## Ask-first list\n${s.ask_first_list}\n\n## Seed brief (host gives this to the side chat, filling {{OWNER_NAME}})\n${s.seed_brief}\n\n${s.setup_flow ? `## Setup flow\n${s.setup_flow}\n\n` : ""}---\n\n${specTexts}\n\n---\n\n**How the host stamps this room:** \`chat.create\` (fresh side chat) → paste the seed brief with {{OWNER_NAME}} filled → file the board-cards template → create the cron jobs and sweeps from the mill specs above.`
   );
 }
 
@@ -164,6 +148,38 @@ export function get_house_template({ owner_name = "", timezone = "", spend_thres
   const { house_md, op_proc_md, remaining } = fillTemplate({ owner_name, timezone, spend_threshold });
   return text(
     `# Starter house template\n\nTokens remaining to fill: ${remaining.length ? remaining.join(", ") : "none — fully personalized"}\n\n---\n\n## house/HOUSE.md\n\n${house_md}\n\n---\n\n## house/OP-PROC.md\n\n${op_proc_md}\n\n---\n\n**Host:** write these to the household's house/ directory, filling any remaining tokens from onboarding. The live board (WAVEBOARD.md) is the household's own — this service never sees it.`
+  );
+}
+
+// ---------------------------------------------------------------- get_started
+/** First-contact onboarding: the host agent calls this when a new user connects.
+ * Returns the 3 questions to ask and what happens with the answers. */
+export function get_started() {
+  return text(
+`# Welcome to Muse House 🏠
+
+I'll set up your personal operating house — 9 rooms, each with a job to do.
+Three quick questions:
+
+**1. What should I call you?**
+Your first name — it goes in the house template and room intros.
+
+**2. What timezone are you in?**
+e.g. America/Chicago, America/New_York — for scheduling your briefings.
+
+**3. What's the #1 thing you want your house to handle?**
+e.g. "never miss a bill", "track my workouts", "plan my trips"
+
+---
+
+**What happens next:**
+1. You answer → I call \`suggest_utilities\` to rank connectors for your goal
+2. I call \`get_house_template\` with your name/timezone → your HOUSE.md + OP-PROC.md
+3. I call \`stamp_rooms\` → creates all 9 room chats, each seeded with its blueprint
+4. Each room asks its own onboarding questions, then proposes its mill jobs
+5. You approve → I create the scheduled jobs → house is live
+
+No website, no paste-a-prompt. Just answer the 3 questions and we're off.`
   );
 }
 
@@ -368,46 +384,27 @@ export function get_feedback_form() {
   );
 }
 
-// ---------------------------------------------------------------- install_skill
 /**
- * install_skill — return a purchased skill's files so the host agent can
- * install it into the buyer's house.
+ * install_skill — fetch a skill from the private skills repo and return its
+ * files so the host agent can install it into the buyer's house.
  *
- * Flow: customer buys a skill-backed Bling item via website Stripe Checkout →
- * Stripe webhook fires → the Bling room polls /api/bling/orders, sees the
- * paid order (session_id + skill) → calls install_skill { skill_id,
- * session_id } → ENTITLEMENT GATE (verifySkillEntitlement: Stripe says the
- * session is paid AND its item sells this skill) → only then are the files
- * fetched from the private skills repo and returned → host writes them.
+ * Flow: customer buys a skill-backed Bling item → Stripe webhook fires →
+ * the Bling room polls /api/bling/orders, sees the purchase → calls
+ * install_skill with the item's skill id → host writes the returned files
+ * to the house's skills directory → Bling room confirms installation.
  *
- * No paid entitlement → no files, and the skills repo is never contacted.
- * This tool never charges, refunds, or moves money; Stripe Checkout on the
- * website is the only payment path.
- *
- * Auth: SKILLS_REPO_TOKEN env (read access to private 0xRayAI/muse-house-skills).
- * The token never leaves the server; only skill file contents are returned.
+ * Auth: SKILLS_REPO_TOKEN env (GitHub token with read access to the private
+ * 0xRayAI/muse-house-skills repo). The MCP stays public — the token never
+ * leaves the server; only skill file contents are returned.
  */
-const SKILLS_REPO = "0xRayAI/muse-house-skills";
-const SKILL_MAX_FILES = 25;
-const SKILL_MAX_BYTES = 256 * 1024;
-const SKILL_MAX_DEPTH = 4; // nesting under skill id; root collect([id]) is depth 0
-
-export async function install_skill({ skill_id = "", session_id = "" } = {}) {
+export async function install_skill({ skill_id = "" } = {}) {
   const id = String(skill_id).trim().toLowerCase().replace(/[^a-z0-9-]/g, "");
   if (!id) return text("install_skill error: missing skill_id.");
-
-  // Purchase / entitlement gate — runs BEFORE any skill file is fetched.
-  const { verifySkillEntitlement } = await import("./bling.mjs");
-  const ent = await verifySkillEntitlement({ skill_id: id, session_id });
-  if (!ent.ok) {
-    return text(`install_skill refused (${ent.reason}): ${ent.message}`);
-  }
-
   const token = process.env.SKILLS_REPO_TOKEN;
   if (!token) {
     return text(
-      `install_skill unavailable: purchase verified (${ent.item.name}), but the skills repo is not connected on this deployment. ` +
-      "Fall back to the email fulfillment path — the order already notified support@mymuse.house with the skill id and house."
+      "install_skill unavailable: the skills repo is not connected on this deployment. " +
+      "Fall back to the email fulfillment path — notify support@mymuse.house with the skill id and house."
     );
   }
   const headers = {
@@ -417,54 +414,29 @@ export async function install_skill({ skill_id = "", session_id = "" } = {}) {
   };
   try {
     const files = [];
-    let bytes = 0;
-    const SAFE_NAME = /^[A-Za-z0-9._-]+$/;
-    const encodePath = (parts) => parts.map(encodeURIComponent).join("/");
-
-    // Walk skill id + subdirs (e.g. assets/). Per-segment sanitize; file/byte/depth caps across the tree.
-    async function collect(parts, isRoot = false) {
-      if (files.length >= SKILL_MAX_FILES) return { ok: true };
+    // Recursively list files in the skill directory (including subdirs like assets/)
+    async function collect(dirPath, prefix) {
       const listRes = await fetch(
-        `https://api.github.com/repos/${SKILLS_REPO}/contents/${encodePath(parts)}`,
+        `https://api.github.com/repos/0xRayAI/muse-house-skills/contents/${encodeURIComponent(dirPath)}`,
         { headers }
       );
-      if (!listRes.ok) {
-        if (isRoot) return { ok: false, status: listRes.status };
-        return { ok: true };
-      }
+      if (!listRes.ok) return false;
       const entries = await listRes.json();
-      for (const e of Array.isArray(entries) ? entries : []) {
-        if (files.length >= SKILL_MAX_FILES) break;
-        const name = e.name || "";
-        if (!SAFE_NAME.test(name)) continue;
-        const next = [...parts, name];
-        if (e.type === "dir") {
-          // depth = parts.length - 1 (root [id] = 0). Skip dirs deeper than SKILL_MAX_DEPTH.
-          if (parts.length - 1 >= SKILL_MAX_DEPTH) continue;
-          const sub = await collect(next);
-          if (sub && sub.oversized) return sub;
-          continue;
+      for (const e of entries) {
+        if (e.type === "file") {
+          const fRes = await fetch(e.download_url, { headers: { "User-Agent": "muse-house-mcp" } });
+          if (!fRes.ok) continue;
+          const content = await fRes.text();
+          files.push({ path: `${prefix}/${e.name}`, content });
+        } else if (e.type === "dir") {
+          await collect(`${dirPath}/${e.name}`, `${prefix}/${e.name}`);
         }
-        if (e.type !== "file") continue;
-        const fRes = await fetch(
-          `https://api.github.com/repos/${SKILLS_REPO}/contents/${encodePath(next)}`,
-          { headers: { ...headers, Accept: "application/vnd.github.raw" } }
-        );
-        if (!fRes.ok) continue;
-        const content = await fRes.text();
-        bytes += Buffer.byteLength(content);
-        if (bytes > SKILL_MAX_BYTES) return { ok: true, oversized: true };
-        files.push({ path: next.join("/"), content });
       }
-      return { ok: true };
+      return true;
     }
-
-    const root = await collect([id], true);
-    if (!root.ok) {
-      return text(`install_skill error: skill \`${id}\` not found in the skills repo (HTTP ${root.status}).`);
-    }
-    if (root.oversized) {
-      return text(`install_skill error: skill \`${id}\` is larger than ${SKILL_MAX_BYTES} bytes — contact support@mymuse.house.`);
+    const found = await collect(id, id);
+    if (!found) {
+      return text(`install_skill error: skill \`${id}\` not found in the skills repo.`);
     }
     if (!files.length) return text(`install_skill error: skill \`${id}\` has no files.`);
     const fileBlocks = files
@@ -472,8 +444,7 @@ export async function install_skill({ skill_id = "", session_id = "" } = {}) {
       .join("\n\n");
     return text(
       `# Skill: ${id} — ${files.length} file(s)\n\n` +
-      `Entitlement: paid Bling purchase verified with Stripe (${ent.item.name}, session ${ent.session_id}).\n\n` +
-      `**Host:** with the human's OK, write each file below to the house's skills directory ` +
+      `**Host:** write each file below to the house's skills directory ` +
       `(\`~/workspace/skills/${id}/\`), creating the directory if needed. ` +
       `Then confirm to the human: "${id} installed."\n\n---\n\n${fileBlocks}`
     );
@@ -484,9 +455,14 @@ export async function install_skill({ skill_id = "", session_id = "" } = {}) {
 
 export const TOOL_DEFS = [
   {
+    name: "get_started",
+    description: "First-contact onboarding for a new user. Returns the 3 questions to ask (name, timezone, top goal) and explains the setup flow. The host agent calls this when someone connects without a house.",
+    inputSchema: { type: "object", properties: {} },
+    fn: get_started,
+  },
+  {
     name: "suggest_utilities",
-    access: "read",
-    description: "[read] Rank the Muse connectors (utilities) a household should turn on, given a profile and goal. Returns the curated catalog ranked by keyword fit, each with a one-line why.",
+    description: "Rank the Muse connectors (utilities) a household should turn on, given a profile and goal. Returns the curated catalog ranked by keyword fit, each with a one-line why.",
     inputSchema: {
       type: "object",
       properties: {
@@ -498,8 +474,7 @@ export const TOOL_DEFS = [
   },
   {
     name: "suggest_steps",
-    access: "read",
-    description: "[read] Build an ordered operating plan for a goal, given the utilities already chosen. Concrete steps the host agent executes: onboarding, per-utility setup, house minting, room stamping, mill startup. The tool itself only returns the plan.",
+    description: "Build an ordered operating plan for a goal, given the utilities already chosen. Concrete steps the host agent executes: onboarding, per-utility setup, house minting, room stamping, mill startup.",
     inputSchema: {
       type: "object",
       properties: {
@@ -511,22 +486,17 @@ export const TOOL_DEFS = [
   },
   {
     name: "list_rooms",
-    access: "read",
-    description: "[read] List the nine house room blueprints (art, bling, coach, dev, game, health, home, money, travel) with one-line descriptions.",
+    description: "List the house room blueprints (money, travel, home, health, game, art, dev) with one-line descriptions.",
     inputSchema: { type: "object", properties: {} },
     fn: list_rooms,
   },
   {
     name: "get_room_brief",
-    access: "read",
-    description: "[read] Full blueprint for one room: purpose, connectors, onboarding fills, mill jobs with full specs, board-card templates, ask-first list, and the side-chat seed brief. The host uses this to stamp the room's side chat.",
+    description: "Full blueprint for one room: purpose, connectors, onboarding fills, mill jobs with full specs, board-card templates, ask-first list, and the side-chat seed brief. The host uses this to stamp the room's side chat.",
     inputSchema: {
       type: "object",
       properties: {
-        room: { type: "string", description: "Room id: art | bling | coach | dev | game | health | home | money | travel" },
-        owned: { type: "string", description: "Comma-separated owned Bling item ids. Omit when the house owns none." },
-        voice: { type: "string", description: "Voice id from the briefing voice pack. Used only when that pack is owned." },
-        purchased_at: { type: "string", description: "ISO time the Midnight Diner was purchased. Starts the 30-day timer." },
+        room: { type: "string", description: "Room id: money | travel | home | health | game | art | dev" },
       },
       required: ["room"],
     },
@@ -534,8 +504,7 @@ export const TOOL_DEFS = [
   },
   {
     name: "get_house_template",
-    access: "read",
-    description: "[read] Starter HOUSE.md and OP-PROC.md for a new household, with {{TOKENS}} filled where owner_name/timezone/spend_threshold are given. Remaining tokens are listed so the host can finish personalization.",
+    description: "Starter HOUSE.md and OP-PROC.md for a new household, with {{TOKENS}} filled where owner_name/timezone/spend_threshold are given. Remaining tokens are listed so the host can finish personalization.",
     inputSchema: {
       type: "object",
       properties: {
@@ -548,8 +517,7 @@ export const TOOL_DEFS = [
   },
   {
     name: "stamp_rooms",
-    access: "read",
-    description: "[read] Executable room-creation protocol for the host agent. Returns, per room, the exact side-chat name to create, the verbatim seed message to send first, and the mill jobs to schedule. This MCP tool does not create chats or write to the host — it returns the plan; the host executes it.",
+    description: "Executable room-creation protocol for the host agent. Returns, per room, the exact side-chat name to create, the verbatim seed message to send first, and the mill jobs to schedule. The host executes the three actions per room in order — this is how rooms get created from the product.",
     inputSchema: {
       type: "object",
       properties: {
@@ -561,8 +529,7 @@ export const TOOL_DEFS = [
   },
   {
     name: "codex_check",
-    access: "read",
-    description: "[read] Advisory check of a planned action against the 22-term consumer codex. Returns PASS, ADVISORY, or FLAG with matched terms cited. Not a hard gate — the host agent decides.",
+    description: "Advisory check of a planned action against the 22-term consumer codex. Returns PASS, ADVISORY, or FLAG with matched terms cited. Not a hard gate — the host agent decides.",
     inputSchema: {
       type: "object",
       properties: {
@@ -574,13 +541,12 @@ export const TOOL_DEFS = [
   },
   {
     name: "send_feedback",
-    access: "sensitive-write",
-    description: "[sensitive-write] Relay user feedback about Muse House to the team inbox (durable offsite email via Resend). STRUCTURED form — call get_feedback_form first and present its fields. RULES: (1) Only call when the human explicitly asks to send feedback AND has confirmed the exact kind/room/summary/details you will send — show it verbatim, get a yes. Never speculative, never a side effect. (2) Never forward personal or private information: strip names, emails, phones, addresses, account numbers, financial figures; summarize the issue without them. The service redacts obvious patterns server-side as a backstop. Rate-limited; nothing stored server-side. The message goes to the Muse House team, not to any of the user's contacts.",
+    description: "Relay user feedback about Muse House to the team inbox. STRUCTURED form — call get_feedback_form first and present its fields. RULES: (1) Only call when the human explicitly asks to send feedback AND has confirmed the exact kind/room/summary/details you will send — show it verbatim, get a yes. Never speculative, never a side effect. (2) Never forward personal or private information: strip names, emails, phones, addresses, account numbers, financial figures; summarize the issue without them. The service redacts obvious patterns server-side as a backstop. The message goes to the Muse House team, not to any of the user's contacts.",
     inputSchema: {
       type: "object",
       properties: {
         kind: { type: "string", enum: ["Help", "Feedback", "Bug report", "Feature idea"], description: "What kind of feedback this is" },
-        room: { type: "string", enum: ["money", "travel", "home", "health", "game", "art", "dev", "coach", "bling", "website", "other"], description: "Which room (or the website) this is about" },
+        room: { type: "string", enum: ["money", "travel", "home", "health", "game", "art", "dev", "website", "other"], description: "Which room (or the website) this is about" },
         summary: { type: "string", description: "One-line summary (max 150 chars)" },
         details: { type: "string", description: "What happened, or what they'd like to see (max 2000 chars). No personal data." },
       },
@@ -590,15 +556,13 @@ export const TOOL_DEFS = [
   },
   {
     name: "get_feedback_form",
-    access: "read",
-    description: "[read] Returns the feedback form schema: fields, allowed values, length limits, and the privacy note to show the human. Call this when the human wants to send feedback, present the fields conversationally, then show them the exact text and get an explicit yes before calling send_feedback.",
+    description: "Returns the feedback form schema: fields, allowed values, length limits, and the privacy note to show the human. Call this when the human wants to send feedback, present the fields conversationally, then show them the exact text and get an explicit yes before calling send_feedback.",
     inputSchema: { type: "object", properties: {} },
     fn: get_feedback_form,
   },
   {
     name: "check_room_updates",
-    access: "read",
-    description: "[read] Diff your house's recorded room blueprint versions against the live product. Pass {rooms: {art: 1, money: 1, ...}} with the versions your house tracks (get_house_template ships a room-versions table). Returns per-room upgrades: latest version, changelog since yours, and the upgrade path — 'patch' (send the included message to the existing room chat; history preserved) or 're-stamp' (export state, recreate via stamp_rooms, restore). Run weekly so rooms never go stale.",
+    description: "Diff your house's recorded room blueprint versions against the live product. Pass {rooms: {art: 1, money: 1, ...}} with the versions your house tracks (get_house_template ships a room-versions table). Returns per-room upgrades: latest version, changelog since yours, and the upgrade path — 'patch' (send the included message to the existing room chat; history preserved) or 're-stamp' (export state, recreate via stamp_rooms, restore). Run weekly so rooms never go stale.",
     inputSchema: {
       type: "object",
       properties: {
@@ -614,15 +578,13 @@ export const TOOL_DEFS = [
   },
   {
     name: "install_skill",
-    access: "write",
-    description: "[write] Install a purchased product skill into the buyer's house. Requires proof of a PAID Bling purchase: pass the Stripe Checkout session_id (from /api/bling/orders) plus the item's skill_id. The server verifies with Stripe that the session is paid and that its item sells this skill; without that entitlement it refuses and returns no files. On success it returns the skill files with write instructions — this tool does not write anything itself; the host writes the files to the house's skills directory with the human's OK. Never charges or moves money (website Stripe Checkout is the only payment path). Requires Stripe + SKILLS_REPO_TOKEN on the deployment; otherwise refuses or falls back to email fulfillment.",
+    description: "Install a product skill into the buyer's house. Call this after a skill-backed Bling purchase (the Bling room polls /api/bling/orders to see what was bought). Takes a skill_id, fetches the skill files from the private skills repo, and returns them with write instructions. The host agent writes the files to the house's skills directory. Requires SKILLS_REPO_TOKEN on the deployment; falls back to email fulfillment when unconfigured.",
     inputSchema: {
       type: "object",
       properties: {
         skill_id: { type: "string", description: "Skill id from the catalog item's skill field, e.g. 'voice-briefing'" },
-        session_id: { type: "string", description: "Stripe Checkout session id of the paid Bling purchase (cs_live_… / cs_test_…), from /api/bling/orders" },
       },
-      required: ["skill_id", "session_id"],
+      required: ["skill_id"],
     },
     fn: install_skill,
   },
