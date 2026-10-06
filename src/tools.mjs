@@ -192,13 +192,14 @@ Allow custom text input as fallback.
 
 **What do you want your house to handle?**
 
-UI: multi_select
+UI: single_select
 Options:
 - Never miss a bill
 - Track my money
 - Plan my trips
 - Stay on top of health
-Allow custom text input as fallback. User may select multiple.
+Allow custom text input as fallback.
+NOTE: muse.create_options widgets are single-use — one tap consumes the widget. Do not attempt tap-multiple patterns.
 
 (Ask this one question now with the multi-select picker. When they answer, call \`get_started\` with \`step: 4\`, \`name: "${name || "<name>"} "\`, \`timezone: "${timezone || "<timezone>"} "\`, and \`goal: "<their answer(s), comma-separated>"\`.)`
     );
