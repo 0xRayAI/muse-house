@@ -9,7 +9,8 @@
       "name": "Spark test",
       "price_cents": 50,
       "chat_asset": "sandbox://workspace/muse-house/site/bling/delights/stickers/sparkle.gif",
-      "image": "https://mymuse.house/bling/delights/stickers/sparkle.gif"
+      "image": "https://mymuse.house/bling/delights/stickers/sparkle.gif",
+      "coming_soon": true
     },
     {
       "deliverable": "/bling/delights/neon-nights/",
@@ -19,7 +20,8 @@
       "name": "Neon Nights",
       "price_cents": 300,
       "chat_asset": "sandbox://workspace/muse-house/site/bling/delights/stickers/gem.gif",
-      "image": "https://mymuse.house/bling/delights/stickers/gem.gif"
+      "image": "https://mymuse.house/bling/delights/stickers/gem.gif",
+      "coming_soon": true
     },
     {
       "deliverable": "/bling/delights/midnight-diner/",
@@ -29,7 +31,8 @@
       "name": "Midnight Diner",
       "price_cents": 500,
       "chat_asset": "sandbox://workspace/muse-house/bling/delights/stickers/diner.gif",
-      "image": "https://mymuse.house/bling/delights/stickers/diner.gif"
+      "image": "https://mymuse.house/bling/delights/stickers/diner.gif",
+      "coming_soon": true
     },
     {
       "deliverable": "/bling/delights/year-in-review/",
@@ -39,7 +42,8 @@
       "name": "Year in Review",
       "price_cents": 900,
       "chat_asset": "sandbox://workspace/muse-house/bling/delights/stickers/trophy.gif",
-      "image": "https://mymuse.house/bling/delights/stickers/trophy.gif"
+      "image": "https://mymuse.house/bling/delights/stickers/trophy.gif",
+      "coming_soon": true
     },
     {
       "deliverable": "/bling/delights/voice-pack/",
@@ -60,7 +64,8 @@
       "name": "Mystery Drop",
       "price_cents": 400,
       "chat_asset": "sandbox://workspace/muse-house/site/bling/delights/stickers/gift.gif",
-      "image": "https://mymuse.house/bling/delights/stickers/gift.gif"
+      "image": "https://mymuse.house/bling/delights/stickers/gift.gif",
+      "coming_soon": true
     },
     {
       "deliverable": "/bling/delights/seasonal-pack/",
@@ -70,7 +75,8 @@
       "name": "Seasonal Pack",
       "price_cents": 600,
       "chat_asset": "sandbox://workspace/muse-house/bling/delights/stickers/seasonal.gif",
-      "image": "https://mymuse.house/bling/delights/stickers/seasonal.gif"
+      "image": "https://mymuse.house/bling/delights/stickers/seasonal.gif",
+      "coming_soon": true
     },
     {
       "id": "house-anthem",
@@ -80,7 +86,8 @@
       "price_cents": 200,
       "deliverable": "/bling/delights/house-anthem.html",
       "chat_asset": "sandbox://workspace/muse-house/site/bling/delights/stickers/music.gif",
-      "image": "https://mymuse.house/bling/delights/stickers/music.gif"
+      "image": "https://mymuse.house/bling/delights/stickers/music.gif",
+      "coming_soon": true
     },
     {
       "id": "sticker-pack-1",
@@ -90,7 +97,8 @@
       "price_cents": 300,
       "deliverable": "/bling/delights/sticker-pack-1.html",
       "chat_asset": "sandbox://workspace/muse-house/site/bling/delights/stickers/party.gif",
-      "image": "https://mymuse.house/bling/delights/stickers/party.gif"
+      "image": "https://mymuse.house/bling/delights/stickers/party.gif",
+      "coming_soon": true
     },
     {
       "id": "emoji-pack-free",
