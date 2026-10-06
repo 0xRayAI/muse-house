@@ -154,8 +154,19 @@ export async function handleBlingOrders(searchParams) {
   if (!expected) return json(503, { error: "orders_not_configured" });
   const given = searchParams ? searchParams.get("token") : "";
   if (!tokensEqual(given, expected)) return json(401, { error: "unauthorized" });
+
+  // Include dev grants from the local JSONL file
+  let devGrants = [];
+  try {
+    const { readFileSync } = await import("node:fs");
+    const data = readFileSync(new URL("../data/dev-grants.jsonl", import.meta.url), "utf8");
+    devGrants = data.trim().split("\n").filter(Boolean).map((l) => JSON.parse(l));
+  } catch {
+    // No dev grants file yet — that's fine
+  }
+
   const stripe = await stripeClient().catch(() => null);
-  if (!stripe) return json(503, { error: "payments_not_configured" });
+  if (!stripe && !devGrants.length) return json(503, { error: "payments_not_configured" });
   try {
     const sessions = await stripe.checkout.sessions.list({ limit: 25 });
     const items = getCatalog().items || [];
@@ -230,6 +241,24 @@ export async function handleBlingDevGrant(body) {
     house,
     deliverable: item.deliverable || "",
   });
+  // Persist dev grant so it appears in the order feed (Bling room polls this)
+  try {
+    const { appendFileSync, mkdirSync } = await import("node:fs");
+    const grant = {
+      session_id: sessionId,
+      item_id: item.id,
+      item_name: item.name,
+      house,
+      email,
+      granted_at: new Date().toISOString(),
+      dev: true,
+    };
+    mkdirSync(new URL("../data", import.meta.url), { recursive: true });
+    appendFileSync(new URL("../data/dev-grants.jsonl", import.meta.url), JSON.stringify(grant) + "\n");
+  } catch (e) {
+    console.error("bling: failed to persist dev grant:", String((e && e.message) || e));
+  }
+
   return json(200, {
     granted: true,
     item_id: item.id,
