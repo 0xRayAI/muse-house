@@ -203,7 +203,9 @@ export async function handleBlingOrders(searchParams) {
  * Body: { dev_token, item_id, house?, email? }
  * Validates dev_token against BLING_DEV_TOKEN env (timing-safe), then runs
  * the same fulfillment path as a Stripe webhook (notifyFulfillment) with a
- * dev session id. Returns the deliverable URL directly for verification.
+ * dev session id (dev_<itemId>_<timestamp>). Returns the deliverable URL
+ * directly for verification. Dev sessions also unlock skill files via
+ * install_skill while BLING_DEV_TOKEN is configured.
  * NOT for production use — gate with a strong token and rotate it.
  */
 export async function handleBlingDevGrant(body) {
@@ -312,6 +314,11 @@ export async function verifySkillEntitlement({ skill_id = "", session_id = "" } 
   // endpoint is already gated by BLING_DEV_TOKEN, so possession implies auth.
   const devMatch = /^dev_([A-Za-z0-9_-]+)_([0-9]+)$/.exec(sid);
   if (devMatch) {
+    // Dev grants only validate while BLING_DEV_TOKEN is configured — removing
+    // the key disables all dev unlocks, including previously issued sessions.
+    if (!process.env.BLING_DEV_TOKEN) {
+      return { ok: false, reason: "no_entitlement", message: "dev grants are disabled on this deployment — no skill files returned." };
+    }
     const item = skillItems.find((i) => i.id === devMatch[1]);
     if (!item) {
       return { ok: false, reason: "no_entitlement", message: `dev grant for unknown item (${devMatch[1]}) — no skill files returned.` };
