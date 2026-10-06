@@ -152,34 +152,57 @@ export function get_house_template({ owner_name = "", timezone = "", spend_thres
 }
 
 // ---------------------------------------------------------------- get_started
-/** First-contact onboarding: the host agent calls this when a new user connects.
- * Returns the 3 questions to ask and what happens with the answers. */
-export function get_started() {
-  return text(
+/** First-contact onboarding wizard: the host agent calls this with no args
+ * to start, then with step+answers to advance. One question at a time. */
+export function get_started({ step = 1, name = "", timezone = "", goal = "" } = {}) {
+  if (step === 1) {
+    return text(
 `# Welcome to Muse House 🏠
 
 I'll set up your personal operating house — 9 rooms, each with a job to do.
-Three quick questions:
+Three quick questions, one at a time.
 
-**1. What should I call you?**
+**What should I call you?**
 Your first name — it goes in the house template and room intros.
 
-**2. What timezone are you in?**
+(Ask this one question now. When they answer, call \`get_started\` with \`step: 2\` and \`name: "<their answer>"\`.)`
+    );
+  }
+  if (step === 2) {
+    return text(
+`**Got it, ${name || "friend"}.**
+
+**What timezone are you in?**
 e.g. America/Chicago, America/New_York — for scheduling your briefings.
 
-**3. What's the #1 thing you want your house to handle?**
+(Ask this one question now. When they answer, call \`get_started\` with \`step: 3\`, \`name: "${name || "<name>"} "\`, and \`timezone: "<their answer>"\`.)`
+    );
+  }
+  if (step === 3) {
+    return text(
+`**${timezone || "Timezone"} — noted.**
+
+**What's the #1 thing you want your house to handle?**
 e.g. "never miss a bill", "track my workouts", "plan my trips"
 
----
+(Ask this one question now. When they answer, call \`get_started\` with \`step: 4\`, \`name: "${name || "<name>"} "\`, \`timezone: "${timezone || "<timezone>"} "\`, and \`goal: "<their answer>"\`.)`
+    );
+  }
+  // step 4+: all answers collected — return the setup plan
+  return text(
+`# Setup plan for ${name || "your house"}
+
+**Goal:** ${goal || "(not specified)"}
+**Timezone:** ${timezone || "(not specified)"}
 
 **What happens next:**
-1. You answer → I call \`suggest_utilities\` to rank connectors for your goal
-2. I call \`get_house_template\` with your name/timezone → your HOUSE.md + OP-PROC.md
+1. I call \`suggest_utilities\` with your profile/goal → ranked connectors
+2. I call \`get_house_template\` with your name/timezone → HOUSE.md + OP-PROC.md
 3. I call \`stamp_rooms\` → creates all 9 room chats, each seeded with its blueprint
 4. Each room asks its own onboarding questions, then proposes its mill jobs
 5. You approve → I create the scheduled jobs → house is live
 
-No website, no paste-a-prompt. Just answer the 3 questions and we're off.`
+Ready? Say "go" and I'll start building.`
   );
 }
 
@@ -514,8 +537,16 @@ export async function install_skill({ skill_id = "" } = {}) {
 export const TOOL_DEFS = [
   {
     name: "get_started",
-    description: "First-contact onboarding for a new user. Returns the 3 questions to ask (name, timezone, top goal) and explains the setup flow. The host agent calls this when someone connects without a house.",
-    inputSchema: { type: "object", properties: {} },
+    description: "First-contact onboarding wizard for a new user. Call with no args to start (returns question 1). Call with step: 2 + name to get question 2. Call with step: 3 + name + timezone to get question 3. Call with step: 4 + all answers to get the setup plan. One question at a time.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        step: { type: "number", description: "Wizard step: 1 (default), 2, 3, or 4" },
+        name: { type: "string", description: "Owner's first name (from step 1 answer)" },
+        timezone: { type: "string", description: "IANA timezone (from step 2 answer)" },
+        goal: { type: "string", description: "Top goal (from step 3 answer)" },
+      },
+    },
     fn: get_started,
   },
   {
