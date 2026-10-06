@@ -180,6 +180,17 @@
     box.innerHTML = "<p>Couldn't load the catalog right now — try again in a bit.</p>";
     return;
   }
+  // Check which one-time items this house already owns (server-side, not just localStorage)
+  let serverOwned = [];
+  if (houseTag) {
+    try {
+      const ownRes = await fetch("/api/bling/owned?house=" + encodeURIComponent(houseTag));
+      const ownData = await ownRes.json();
+      serverOwned = ownData.owned || [];
+    } catch (e) { /* owned check failed — show all buy buttons */ }
+  }
+  const localOwned = JSON.parse(localStorage.getItem("museBlingOwned") || "[]");
+  const ownedSet = new Set([...serverOwned, ...localOwned]);
   const groups = [["trinket", "✨ Trinkets"], ["gizmo", "🔧 Gizmos"], ["delight", "🎁 Delights"]];
   box.innerHTML = "";
   for (const [kind, label] of groups) {
@@ -194,12 +205,15 @@
       const card = document.createElement("div");
       card.className = "bling-card";
       const comingSoon = !!item.coming_soon;
+      const alreadyOwned = ownedSet.has(item.id);
       const price = "$" + (item.price_cents / 100).toFixed(item.price_cents % 100 ? 2 : 0);
       card.innerHTML =
         '<div class="kind">' + label + "</div><h3></h3><p></p>" +
         (comingSoon
           ? '<div class="soon">Coming soon</div>'
-          : '<div class="price">' + price + '</div><button type="button">Buy with Stripe</button>');
+          : alreadyOwned
+            ? '<div class="price">' + price + '</div><button type="button" disabled>Owned ✓</button>'
+            : '<div class="price">' + price + '</div><button type="button">Buy with Stripe</button>');
       card.querySelector("h3").textContent = item.name;
       card.querySelector("p").textContent = item.description;
       if (item.image) {
