@@ -18,7 +18,7 @@ import { TOOL_DEFS } from "./tools.mjs";
 import { handleApi } from "./api.mjs";
 import { handleApiTemplate } from "./api.mjs";
 import { handleFeedbackPost } from "./feedback.mjs";
-import { handleBlingCatalog, handleBlingCheckout, handleBlingWebhook, handleBlingOrders, handleBlingDevGrant } from "./bling.mjs";
+import { handleBlingCatalog, handleBlingCheckout, handleBlingWebhook, handleBlingOrders, handleBlingDevGrant, handleBlingOwned } from "./bling.mjs";
 
 const SERVICE = "muse-house";
 const VERSION = "0.1.0";
@@ -209,6 +209,14 @@ const http = createServer(async (req, res) => {
       const gRes = await handleBlingDevGrant(body || {});
       res.writeHead(gRes.status, gRes.headers);
       res.end(gRes.body);
+      return;
+    }
+    if (req.method === "GET" && req.url.startsWith("/api/bling/owned")) {
+      // Public: which one-time items does this house already own?
+      const sp = new URL(req.url, "http://localhost").searchParams;
+      const ownRes = await handleBlingOwned(sp);
+      res.writeHead(ownRes.status, ownRes.headers);
+      res.end(ownRes.body);
       return;
     }
     if (req.method === "GET" && req.url.startsWith("/api/bling/orders")) {

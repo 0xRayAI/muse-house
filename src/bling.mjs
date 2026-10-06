@@ -223,6 +223,44 @@ export async function handleBlingOrders(searchParams) {
 }
 
 /**
+ * GET /api/bling/owned?house=xxx — public. Returns item IDs this house already owns.
+ * Only one-time skill-backed items are reported (they can't be bought twice).
+ * Used by the shop frontend to grey out purchased items.
+ */
+export async function handleBlingOwned(searchParams) {
+  const house = searchParams ? searchParams.get("house") : "";
+  if (!house) return json(200, { owned: [] });
+  const catalog = getCatalog();
+  const oneTimeIds = new Set(
+    (catalog.items || []).filter((i) => i.skill).map((i) => i.id)
+  );
+  // Reuse the same order sources as handleBlingOrders
+  let devGrants = [];
+  try {
+    const { readFileSync } = await import("node:fs");
+    const data = readFileSync(new URL("../data/dev-grants.jsonl", import.meta.url), "utf8");
+    devGrants = data.trim().split("\n").filter(Boolean).map((l) => JSON.parse(l));
+  } catch { /* no dev grants file */ }
+  const owned = new Set();
+  for (const g of devGrants) {
+    if (g.house === house && oneTimeIds.has(g.item_id)) owned.add(g.item_id);
+  }
+  const stripe = await stripeClient().catch(() => null);
+  if (stripe) {
+    try {
+      const sessions = await stripe.checkout.sessions.list({ limit: 100 });
+      for (const s of sessions.data) {
+        if (s.payment_status !== "paid" && s.status !== "complete") continue;
+        const itemId = (s.metadata || {}).bling_item_id;
+        const sHouse = (s.metadata || {}).bling_house;
+        if (itemId && sHouse === house && oneTimeIds.has(itemId)) owned.add(itemId);
+      }
+    } catch { /* stripe failed — dev grants still count */ }
+  }
+  return json(200, { owned: [...owned] });
+}
+
+/**
  * POST /api/bling/dev/grant — dev backdoor. Grants an item without payment.
  *
  * Body: { dev_token, item_id, house?, email? }
