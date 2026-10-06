@@ -218,7 +218,7 @@ export async function handleBlingDevGrant(body) {
   if (!item) return json(404, { error: "unknown_item" });
   const house = (body && body.house) || "dev";
   const email = (body && body.email) || "dev@mymuse.house";
-  const sessionId = `dev_${Date.now()}`;
+  const sessionId = `dev_${item.id}_${Date.now()}`;
   await notifyFulfillment({
     itemName: item.name,
     amountTotal: 0,
@@ -308,8 +308,18 @@ export async function verifySkillEntitlement({ skill_id = "", session_id = "" } 
   if (!sid) {
     return { ok: false, reason: "no_entitlement", message: "missing session_id — skill files are only returned for a paid Bling purchase (pass the Stripe Checkout session id from /api/bling/orders)." };
   }
+  // Dev grant session ids (dev_<itemId>_<timestamp>) bypass Stripe — the dev grant
+  // endpoint is already gated by BLING_DEV_TOKEN, so possession implies auth.
+  const devMatch = /^dev_([A-Za-z0-9_-]+)_([0-9]+)$/.exec(sid);
+  if (devMatch) {
+    const item = skillItems.find((i) => i.id === devMatch[1]);
+    if (!item) {
+      return { ok: false, reason: "no_entitlement", message: `dev grant for unknown item (${devMatch[1]}) — no skill files returned.` };
+    }
+    return { ok: true, item, session_id: sid, dev: true };
+  }
   if (!/^cs_(live|test)_[A-Za-z0-9]{8,200}$/.test(sid)) {
-    return { ok: false, reason: "no_entitlement", message: "session_id is not a Stripe Checkout session id (cs_live_… / cs_test_…). Dev grants and other ids do not unlock skill files." };
+    return { ok: false, reason: "no_entitlement", message: "session_id is not a Stripe Checkout session id (cs_live_… / cs_test_…) or dev grant (dev_…) — no skill files returned." };
   }
   const stripe = await stripeClient().catch(() => null);
   if (!stripe) {
