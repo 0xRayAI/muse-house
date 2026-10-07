@@ -3,7 +3,7 @@
   "items": [
     {
       "deliverable": "/bling/delights/sparkle-shower.html",
-      "description": "Fifty cents of pure proof. A full-screen animated sparkle shower for your house \u2014 and it proves the whole Bling loop works end to end.",
+      "description": "Fifty cents of pure proof. A full-screen animated sparkle shower for your house — and it proves the whole Bling loop works end to end.",
       "id": "spark-test",
       "kind": "trinket",
       "name": "Spark test",
@@ -43,7 +43,7 @@
       "price_cents": 900,
       "chat_asset": "sandbox://workspace/muse-house/bling/delights/stickers/trophy.gif",
       "image": "https://mymuse.house/bling/delights/stickers/trophy.gif",
-      "coming_soon": true
+      "skill": "year-in-review"
     },
     {
       "deliverable": "/bling/delights/voice-pack/",
@@ -82,7 +82,7 @@
       "id": "house-anthem",
       "kind": "delight",
       "name": "House anthem",
-      "description": "Thirty seconds of house pride on a shared anthem track. Optional: add ?house=YourName to show the name on the page (display only \u2014 same audio for every house).",
+      "description": "Thirty seconds of house pride on a shared anthem track. Optional: add ?house=YourName to show the name on the page (display only — same audio for every house).",
       "price_cents": 200,
       "deliverable": "/bling/delights/house-anthem.html",
       "chat_asset": "sandbox://workspace/muse-house/site/bling/delights/stickers/music.gif",
@@ -93,7 +93,7 @@
       "id": "sticker-pack-1",
       "kind": "delight",
       "name": "House Stickers Vol. 1",
-      "description": "Six animated stickers for your house \u2014 sparkle bursts, a spinning gem, a little rocket. Stick them anywhere.",
+      "description": "Six animated stickers for your house — sparkle bursts, a spinning gem, a little rocket. Stick them anywhere.",
       "price_cents": 300,
       "deliverable": "/bling/delights/sticker-pack-1.html",
       "chat_asset": "sandbox://workspace/muse-house/site/bling/delights/stickers/party.gif",
@@ -103,7 +103,7 @@
     {
       "id": "emoji-pack-free",
       "name": "Emoji Pack (Free)",
-      "description": "Switch all 9 rooms to a new emoji theme \u2014 Midnight Diner, Neon Nights, and more.",
+      "description": "Switch all 9 rooms to a new emoji theme — Midnight Diner, Neon Nights, and more.",
       "price_cents": 0,
       "kind": "gizmo",
       "skill": "emoji-pack",
