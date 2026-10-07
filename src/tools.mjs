@@ -157,7 +157,9 @@ export function get_house_template({ owner_name = "", timezone = "", spend_thres
 export function get_started({ step = 1, name = "", timezone = "", goal = "", room = "" } = {}) {
   if (step === 1) {
     return text(
-`# Welcome to Muse House 🏠
+`![Muse House](https://mymuse.house/brand-intro.webp)
+
+# Welcome to Muse House 🏠
 
 I'll set up your personal operating house — 9 rooms, each with a job to do.
 Three quick questions, one at a time.
@@ -177,10 +179,26 @@ UI: text_input (free text, single line)
 
 UI: single_select
 Options:
-- America/Chicago
 - America/New_York
-- America/Los_Angeles
+- America/Chicago
 - America/Denver
+- America/Los_Angeles
+- America/Anchorage
+- Pacific/Honolulu
+- America/Toronto
+- America/Vancouver
+- America/Sao_Paulo
+- Europe/London
+- Europe/Paris
+- Europe/Berlin
+- Africa/Cairo
+- Asia/Dubai
+- Asia/Mumbai
+- Asia/Singapore
+- Asia/Tokyo
+- Asia/Seoul
+- Australia/Sydney
+- Pacific/Auckland
 Allow custom text input as fallback.
 
 (Ask this one question now with the picker. When they answer, call \`get_started\` with \`step: 3\`, \`name: "${name || "<name>"} "\`, and \`timezone: "<their answer>"\`.)`
