@@ -19,6 +19,7 @@ import { handleApi } from "./api.mjs";
 import { handleApiTemplate } from "./api.mjs";
 import { handleFeedbackPost } from "./feedback.mjs";
 import { handleBlingCatalog, handleBlingCheckout, handleBlingWebhook, handleBlingOrders, handleBlingDevGrant, handleBlingOwned } from "./bling.mjs";
+import { routeOAuth, initOAuthRedis } from "./oauth.mjs";
 
 const SERVICE = "muse-house";
 const VERSION = "0.1.0";
@@ -228,6 +229,7 @@ const http = createServer(async (req, res) => {
       res.end(oRes.body);
       return;
     }
+    if (routeOAuth(req, res)) return;
     if (req.method === "GET" && req.url.startsWith("/api/")) {
       const apiRes = handleApi(req.url, new URL(req.url, "http://localhost").searchParams);
       if (apiRes) {
@@ -267,6 +269,7 @@ const http = createServer(async (req, res) => {
   }
 });
 
+await initOAuthRedis();
 http.listen(PORT, () => {
   console.log(`${SERVICE} v${VERSION} listening on :${PORT} — GET / (site), POST /mcp (stateless), GET /health`);
 });
