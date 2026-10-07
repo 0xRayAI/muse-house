@@ -160,6 +160,15 @@ function rateLimit(ip, maxPerMin) {
   bucket.count++;
   return bucket.count <= maxPerMin;
 }
+// Periodic cleanup to prevent memory leak from unbounded Map growth
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, bucket] of rateBuckets) {
+    if (now - bucket.windowStart > 120_000) {
+      rateBuckets.delete(key);
+    }
+  }
+}, 120_000).unref();
 function clientIp(req) {
   return req.headers["x-forwarded-for"]?.split(",")[0]?.trim() || req.socket?.remoteAddress || "unknown";
 }
@@ -264,6 +273,11 @@ export async function handleOAuthAuthorize(req, res, query) {
   const state = query.get("state") || "";
   const codeChallenge = query.get("code_challenge") || "";
   const codeChallengeMethod = query.get("code_challenge_method") || "";
+
+  // Bound state length to prevent abuse
+  if (state.length > 2048) {
+    return htmlError(res, 400, "Invalid state", "State parameter too long.");
+  }
 
   // PKCE is MANDATORY (S256 only)
   if (!codeChallenge) {
