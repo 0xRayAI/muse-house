@@ -76,7 +76,7 @@ export function buildSteps(goal = "", utilities = []) {
   steps.push({ title: "Onboarding answers", detail: "Owner name, timezone, spend ask-first threshold, and pay cadence — these fill the house template tokens." });
   for (const u of known) steps.push({ title: u, detail: UTILITY_STEPS[u] });
   steps.push({ title: "Mint the house", detail: "Call get_house_template with the onboarding answers; the host writes house/HOUSE.md and house/OP-PROC.md." });
-  steps.push({ title: "Stamp rooms", detail: "Call list_rooms, then get_room_brief for each room the household wants; the host opens one side chat per room and seeds it with the brief." });
+  steps.push({ title: "Stamp rooms", detail: "Call stamp_rooms with the starting room + bling (e.g. rooms='money,bling'); the host opens one side chat per room and seeds it with the brief. Other rooms join on demand — never stamp all nine at registration." });
   steps.push({ title: "Start the mill", detail: "Create the cron jobs (morning briefing, bill watch, evening wrap) and sweeps (bill arrivals, low balances, etc.) from the room briefs' mill specs. Sweeps are frequent crons, not event hooks — they poll on a schedule with your credentials." });
   steps.push({ title: "First briefing", detail: "Run the morning-briefing prompt once by hand to prove every source reads, then let the schedule take over." });
   return { goal: goal || "(no goal given)", steps, unknown };
@@ -154,7 +154,7 @@ export function get_house_template({ owner_name = "", timezone = "", spend_thres
 // ---------------------------------------------------------------- get_started
 /** First-contact onboarding wizard: the host agent calls this with no args
  * to start, then with step+answers to advance. One question at a time. */
-export function get_started({ step = 1, name = "", timezone = "", goal = "" } = {}) {
+export function get_started({ step = 1, name = "", timezone = "", goal = "", room = "" } = {}) {
   if (step === 1) {
     return text(
 `# Welcome to Muse House 🏠
@@ -201,23 +201,47 @@ Options:
 Allow custom text input as fallback.
 NOTE: muse.create_options widgets are single-use — one tap consumes the widget. Do not attempt tap-multiple patterns.
 
-(Ask this one question now with the multi-select picker. When they answer, call \`get_started\` with \`step: 4\`, \`name: "${name || "<name>"} "\`, \`timezone: "${timezone || "<timezone>"} "\`, and \`goal: "<their answer(s), comma-separated>"\`.)`
+(Ask this one question now with the picker. When they answer, call \`get_started\` with \`step: 4\`, \`name: "${name || "<name>"} "\`, \`timezone: "${timezone || "<timezone>"} "\`, and \`goal: "<their answer>"\`.)`
     );
   }
-  // step 4+: all answers collected — tell the host to start building.
+  if (step === 4) {
+    return text(
+`**${goal || "Got it"} — noted.**
+
+**Which room do you want to start with?**
+Pick the one that matters most right now — the others can join later.
+
+UI: single_select
+Options:
+- 🎨 Art — make art together
+- 💎 Bling — the house shop
+- 🎯 Coach — stay accountable
+- 💻 Dev — track projects
+- 🎮 Game — organize your games
+- ❤️ Health — appointments and wellness
+- 🏠 Home — chores and repairs
+- 👛 Money — bills and budget
+- ✈️ Travel — plan trips
+
+(Ask this one question now with the picker. When they answer, call \`get_started\` with \`step: 5\`, \`name: "${name || "<name>"} "\`, \`timezone: "${timezone || "<timezone>"} "\`, \`goal: "${goal || "<goal>"} "\`, and \`room: "<their answer>"\`.)`
+    );
+  }
+  // step 5+: all answers collected — tell the host to start building.
   // No plan shown to the user; they already said go. Just build.
+  // Only the chosen room + Bling are stamped — the rest join on demand.
   return text(
 `BUILD_NOW
 
 Owner: ${name || ""}
 Timezone: ${timezone || ""}
 Goal: ${goal || ""}
+Starting room: ${room || ""}
 
 The user has completed onboarding. Start building immediately:
 1. Call \`suggest_utilities\` with the profile/goal
 2. Call \`get_house_template\` with name/timezone → write HOUSE.md + OP-PROC.md
-3. Call \`stamp_rooms\` → create all 9 room chats, seed each with its blueprint
-4. Tell the user: "Your house is ready 🏠" with a one-line summary of what was built.
+3. Call \`stamp_rooms\` with rooms="<starting room id>,bling" → create 2 room chats (their pick + the Bling shop), seed each with its blueprint. Navigate the user to their chosen room.
+4. Tell the user: "Your house is ready 🏠" with a one-line summary of what was built. Mention the other rooms are one tap away whenever they want them.
 Do NOT show this plan to the user. Do NOT ask for confirmation. Build now.`
   );
 }
