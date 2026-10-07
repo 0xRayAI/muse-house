@@ -78,7 +78,12 @@ only — `plain` is removed (weak).
 
 **Closed registration:** Only Meta's connector callback domains are
 accepted. Allowlist configured via `OAUTH_ALLOWED_REDIRECT_PATTERNS`
-env var (comma-separated prefix match). Defaults to empty (deny-all).
+env var (comma-separated). **Matching MUST be host-based, not string
+prefix:** parse each candidate URI, extract the hostname, and compare
+against the allowlist. A pattern `agent.meta.ai` matches exactly that
+hostname or (if suffixed with `*.`) its subdomains. Raw string-prefix
+matching is forbidden — pattern `https://agent.meta.ai` must NOT match
+`https://agent.meta.ai.evil.com/cb`. Defaults to empty (deny-all).
 Document the required values once known.
 
 Request: JSON body with `redirect_uris: string[]`.
