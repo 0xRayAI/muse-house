@@ -43,7 +43,7 @@
       "price_cents": 900,
       "chat_asset": "sandbox://workspace/muse-house/bling/delights/stickers/trophy.gif",
       "image": "https://mymuse.house/bling/delights/stickers/trophy.gif",
-      "coming_soon": true
+      "skill": "year-in-review"
     },
     {
       "deliverable": "/bling/delights/voice-pack/",
