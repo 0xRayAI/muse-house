@@ -240,8 +240,9 @@ Starting room: ${room || ""}
 The user has completed onboarding. Start building immediately:
 1. Call \`suggest_utilities\` with the profile/goal
 2. Call \`get_house_template\` with name/timezone → write HOUSE.md + OP-PROC.md
-3. Call \`stamp_rooms\` with rooms="<starting room id>,bling" → create 2 room chats (their pick + the Bling shop), seed each with its blueprint. Navigate the user to their chosen room.
-4. Tell the user: "Your house is ready 🏠" with a one-line summary of what was built. Mention the other rooms are one tap away whenever they want them.
+3. Call \`stamp_rooms\` with rooms="<starting room id>,bling" → create 2 room chats (their pick + the Bling shop), seed each with its blueprint.
+4. Navigate the user into their starting room: call ui.navigate with target "chat.session" and params {"session_id": "<the new room's chat_id>"} (mode perform). This drops them directly into the room — no hunting through the chat list.
+5. Tell the user: "Your house is ready 🏠" with a one-line summary of what was built. Mention the other rooms are one tap away whenever they want them.
 Do NOT show this plan to the user. Do NOT ask for confirmation. Build now.`
   );
 }
