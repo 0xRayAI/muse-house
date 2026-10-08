@@ -159,8 +159,8 @@ export function get_started({ step = 1, name = "", timezone = "", goal = "", roo
     return text(
 `# Welcome to Muse House 🏠
 
-I'll set up your personal operating house — 9 rooms, each with a job to do.
-Three quick questions, one at a time.
+I'll set up your personal operating house — starting with one room plus the Bling shop.
+Four quick questions, one at a time.
 
 **What should I call you?**
 Your first name — it goes in the house template and room intros.
@@ -310,7 +310,7 @@ Do not recreate anything until the human asks.`
 // chats itself — only the host agent can. This tool returns the complete,
 // executable stamping plan so the host just follows it mechanically:
 // one side chat per room, each seeded with its full blueprint.
-export function stamp_rooms({ rooms: roomIds = "", owner_name = "" } = {}) {
+export function stamp_rooms({ rooms: roomIds = "", owner_name = "", house_name = "" } = {}) {
   const ids = roomIds
     ? (Array.isArray(roomIds) ? roomIds : String(roomIds).split(","))
         .map((s) => String(s).trim().toLowerCase()).filter(Boolean)
@@ -332,7 +332,7 @@ export function stamp_rooms({ rooms: roomIds = "", owner_name = "" } = {}) {
       `## Ask-first list\n${s.ask_first_list}\n\n` +
       `## Seed brief\n${s.seed_brief}\n\n` +
       (s.setup_flow ? `## Setup flow\n${s.setup_flow}` : "")
-    ).replace(/\{\{OWNER_NAME\}\}/g, owner_name || "{{OWNER_NAME}}");
+    ).replace(/\{\{OWNER_NAME\}\}/g, owner_name || "{{OWNER_NAME}}").replace(/\{\{HOUSE_NAME\}\}/g, house_name || "{{HOUSE_NAME}}");
     const millJobs = (brief.millSpecs || [])
       .map((m) => `- **${m.title}** (\`${m.slug}\`, ${m.kind})`)
       .filter(Boolean);
@@ -665,6 +665,7 @@ export const TOOL_DEFS = [
       properties: {
         rooms: { type: "string", description: "Comma-separated room ids (e.g. 'money,travel'). Omit for all nine rooms." },
         owner_name: { type: "string", description: "Owner's first name, filled into each seed brief" },
+        house_name: { type: "string", description: "House name, filled into {{HOUSE_NAME}} tokens (e.g. the Bling shop link)" },
       },
     },
     fn: stamp_rooms,
